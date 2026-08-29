@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/s9_page_background">
+
+    <!-- 生成状态条：仅作低干扰状态提示，剧情由 AI 自动决定是否继续 -->
+    <LinearLayout
+        android:id="@+id/generation_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/space_m"
+        android:layout_marginTop="@dimen/space_s"
+        android:background="@drawable/bg_system_event"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="@dimen/space_m"
+        android:paddingVertical="@dimen/space_s"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <View
+                android:id="@+id/dot_1"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:background="@drawable/bg_status_dot"
+                android:alpha="1.0" />
+
+            <View
+                android:id="@+id/dot_2"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginStart="@dimen/space_xs"
+                android:background="@drawable/bg_status_dot"
+                android:alpha="0.6" />
+
+            <View
+                android:id="@+id/dot_3"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:layout_marginStart="@dimen/space_xs"
+                android:background="@drawable/bg_status_dot"
+                android:alpha="0.3" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_generating_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_s"
+            android:layout_weight="1"
+            android:text="@string/chat_generating"
+            android:textColor="@color/s9_narration_text"
+            android:textSize="@dimen/s9_narration_size" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_stop_generation"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="0dp"
+            android:text="@string/chat_stop_generating"
+            android:textColor="@color/s9_stop" />
+
+    </LinearLayout>
+
+    <!-- 消息区：背景图 -> 覆盖层 -> 列表 -->
+    <FrameLayout
+        android:id="@+id/message_container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@color/s9_page_background">
+
+        <View
+            android:id="@+id/message_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_message_overlay" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_messages"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingHorizontal="@dimen/space_m"
+            android:paddingVertical="@dimen/space_m" />
+
+        <TextView
+            android:id="@+id/tv_new_messages"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="@dimen/space_l"
+            android:background="@drawable/bg_new_messages"
+            android:paddingHorizontal="@dimen/space_l"
+            android:paddingVertical="@dimen/space_s"
+            android:text="@string/chat_new_messages"
+            android:textColor="@color/white"
+            android:textSize="@dimen/text_caption"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <!-- 底部输入栏：动作 + 圆角输入框 + 发送；发送后自动推进剧情 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/s9_top_bar"
+        android:gravity="bottom"
+        android:orientation="horizontal"
+        android:paddingHorizontal="@dimen/space_m"
+        android:paddingVertical="@dimen/space_s">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_narration"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:minWidth="0dp"
+            android:paddingHorizontal="@dimen/space_s"
+            android:text="@string/chat_action_narration"
+            android:textColor="@color/s9_action_text"
+            android:textSize="@dimen/s9_input_hint_size"
+            app:icon="@drawable/ic_edit_note"
+            app:iconGravity="textStart"
+            app:iconSize="18dp"
+            app:iconTint="@color/s9_action_text" />
+
+        <EditText
+            android:id="@+id/input_message"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/space_s"
+            android:layout_weight="1"
+            android:background="@drawable/bg_input_field"
+            android:hint="@string/chat_input_hint"
+            android:textColorHint="@color/s9_input_hint"
+            android:importantForAutofill="no"
+            android:inputType="textMultiLine"
+            android:maxLines="3"
+            android:minHeight="@dimen/s9_input_min_height"
+            android:paddingHorizontal="@dimen/space_l"
+            android:paddingVertical="@dimen/space_s"
+            android:textColor="@color/s9_npc_text"
+            android:textSize="@dimen/s9_input_hint_size" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_send"
+            style="@style/Widget.Material3.Button.IconButton.Filled"
+            android:layout_width="@dimen/s9_icon_button"
+            android:layout_height="@dimen/s9_icon_button"
+            android:contentDescription="@string/chat_send"
+            app:icon="@drawable/ic_send"
+            app:iconTint="@color/white"
+            app:backgroundTint="@color/s9_primary" />
+
+    </LinearLayout>
+</LinearLayout>

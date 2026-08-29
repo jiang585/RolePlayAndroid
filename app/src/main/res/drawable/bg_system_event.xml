@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 系统事件：居中、半透明白圆角容器 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/s9_event_bg" />
+    <corners android:radius="@dimen/s9_event_corner" />
+</shape>

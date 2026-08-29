@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/scriptListFragment">
+
+    <fragment
+        android:id="@+id/scriptListFragment"
+        android:name="com.example.roleplaychat.ui.script.ScriptListFragment"
+        android:label="@string/script_list_title">
+        <action
+            android:id="@+id/action_scriptList_to_scriptDetail"
+            app:destination="@id/scriptDetailFragment" />
+        <action
+            android:id="@+id/action_scriptList_to_settings"
+            app:destination="@id/settingsFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/scriptEditFragment"
+        android:name="com.example.roleplaychat.ui.script.ScriptEditFragment"
+        android:label="@string/script_create">
+        <argument
+            android:name="scriptId"
+            app:argType="string"
+            app:nullable="true" />
+        <action
+            android:id="@+id/action_scriptEdit_to_scriptDetail"
+            app:destination="@id/scriptDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/scriptDetailFragment"
+        android:name="com.example.roleplaychat.ui.script.ScriptDetailFragment"
+        android:label="@string/script_detail_title">
+        <argument
+            android:name="scriptId"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_scriptDetail_to_worldEdit"
+            app:destination="@id/worldEditFragment" />
+        <action
+            android:id="@+id/action_scriptDetail_to_characterList"
+            app:destination="@id/characterListFragment" />
+        <action
+            android:id="@+id/action_scriptDetail_to_characterEdit"
+            app:destination="@id/characterEditFragment" />
+        <action
+            android:id="@+id/action_scriptDetail_to_characterImport"
+            app:destination="@id/characterImportFragment" />
+        <action
+            android:id="@+id/action_scriptDetail_to_identityChooser"
+            app:destination="@id/identityChooserFragment" />
+        <action
+            android:id="@+id/action_scriptDetail_to_chat"
+            app:destination="@id/chatFragment" />
+        <action
+            android:id="@+id/action_scriptDetail_to_appearance"
+            app:destination="@id/appearanceFragment" />
+        <action
+            android:id="@+id/action_scriptDetail_to_export"
+            app:destination="@id/exportFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/worldEditFragment"
+        android:name="com.example.roleplaychat.ui.world.WorldEditFragment"
+        android:label="@string/world_edit_title">
+        <argument
+            android:name="scriptId"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/characterListFragment"
+        android:name="com.example.roleplaychat.ui.character.CharacterListFragment"
+        android:label="@string/character_list_title">
+        <argument
+            android:name="scriptId"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_characterList_to_characterEdit"
+            app:destination="@id/characterEditFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/characterEditFragment"
+        android:name="com.example.roleplaychat.ui.character.CharacterEditFragment"
+        android:label="@string/character_create">
+        <argument
+            android:name="scriptId"
+            app:argType="string" />
+        <argument
+            android:name="characterId"
+            app:argType="string"
+            app:nullable="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/characterImportFragment"
+        android:name="com.example.roleplaychat.ui.character.CharacterImportFragment"
+        android:label="@string/character_import_title">
+        <argument
+            android:name="scriptId"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/identityChooserFragment"
+        android:name="com.example.roleplaychat.ui.identity.IdentityChooserFragment"
+        android:label="@string/identity_title">
+        <argument
+            android:name="scriptId"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/chatFragment"
+        android:name="com.example.roleplaychat.ui.chat.ChatFragment"
+        android:label="@string/chat_title">
+        <argument
+            android:name="scriptId"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_chat_to_appearance"
+            app:destination="@id/appearanceFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/appearanceFragment"
+        android:name="com.example.roleplaychat.ui.appearance.AppearanceFragment"
+        android:label="@string/appearance_title">
+        <argument
+            android:name="scriptId"
+            app:argType="string"
+            app:nullable="true" />
+        <argument
+            android:name="characterId"
+            app:argType="string"
+            app:nullable="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/exportFragment"
+        android:name="com.example.roleplaychat.ui.script.ExportFragment"
+        android:label="@string/import_export_title">
+        <argument
+            android:name="scriptId"
+            app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.example.roleplaychat.ui.settings.SettingsFragment"
+        android:label="@string/settings_title" />
+</navigation>

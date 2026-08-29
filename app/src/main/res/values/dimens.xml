@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="space_xs">4dp</dimen>
+    <dimen name="space_s">8dp</dimen>
+    <dimen name="space_m">12dp</dimen>
+    <dimen name="space_l">16dp</dimen>
+    <dimen name="space_xl">24dp</dimen>
+
+    <dimen name="screen_margin">20dp</dimen>
+    <dimen name="card_corner">8dp</dimen>
+    <dimen name="bubble_corner">12dp</dimen>
+    <dimen name="bubble_corner_tail">4dp</dimen>
+    <dimen name="avatar_size">40dp</dimen>
+    <dimen name="avatar_size_large">64dp</dimen>
+    <dimen name="avatar_corner">8dp</dimen>
+
+    <dimen name="text_caption">12sp</dimen>
+    <dimen name="text_body">14sp</dimen>
+    <dimen name="text_body_large">16sp</dimen>
+    <dimen name="text_title">18sp</dimen>
+    <dimen name="text_headline">22sp</dimen>
+
+    <dimen name="chat_bubble_max_width">240dp</dimen>
+    <dimen name="chat_list_padding">12dp</dimen>
+    <dimen name="chat_input_height">48dp</dimen>
+    <dimen name="chat_narration_padding">10dp</dimen>
+    <dimen name="toolbar_height">56dp</dimen>
+    <dimen name="section_gap">28dp</dimen>
+
+    <!-- S9 群聊设计尺寸 -->
+    <dimen name="s9_group_name_size">17sp</dimen>
+    <dimen name="s9_subtitle_size">11sp</dimen>
+    <dimen name="s9_npc_name_size">12sp</dimen>
+    <dimen name="s9_message_size">15sp</dimen>
+    <dimen name="s9_narration_size">12sp</dimen>
+    <dimen name="s9_event_size">11sp</dimen>
+    <dimen name="s9_input_hint_size">14sp</dimen>
+    <dimen name="s9_avatar_mine">40dp</dimen>
+    <dimen name="s9_avatar_npc">44dp</dimen>
+    <dimen name="s9_bubble_corner_large">16dp</dimen>
+    <dimen name="s9_bubble_corner_tail">4dp</dimen>
+    <dimen name="s9_input_corner">18dp</dimen>
+    <dimen name="s9_input_min_height">42dp</dimen>
+    <dimen name="s9_narration_corner">12dp</dimen>
+    <dimen name="s9_event_corner">10dp</dimen>
+    <dimen name="s9_status_corner">10dp</dimen>
+    <dimen name="s9_message_gap">10dp</dimen>
+    <dimen name="s9_group_gap">20dp</dimen>
+    <dimen name="s9_icon_button">44dp</dimen>
+</resources>

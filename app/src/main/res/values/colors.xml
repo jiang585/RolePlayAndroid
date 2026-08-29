@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- 品牌色 -->
+    <color name="brand_primary">#FF397C70</color>
+    <color name="brand_primary_dark">#FF286258</color>
+    <color name="brand_primary_light">#FF6E9E93</color>
+    <color name="brand_on_primary">#FFFFFFFF</color>
+    <color name="brand_secondary">#FFC99647</color>
+    <color name="brand_surface">#FFFFFCF6</color>
+    <color name="brand_background">#FFF8F5ED</color>
+    <color name="brand_surface_variant">#FFF0EEE5</color>
+    <color name="brand_on_surface">#FF242722</color>
+    <color name="brand_on_surface_variant">#FF6E716A</color>
+    <color name="brand_outline">#FFD9D5C9</color>
+    <color name="brand_cream">#FFFFFCF6</color>
+    <color name="brand_mint_tint">#FFE6EFE9</color>
+    <color name="brand_gold_tint">#FFF8EDCD</color>
+    <color name="brand_hero">#FFD7E2D8</color>
+
+    <!-- 聊天界面 -->
+    <color name="chat_background_default">#FFEDEDEB</color>
+    <color name="chat_bubble_mine">#FF95EC69</color>
+    <color name="chat_bubble_theirs">#FFFFFFFF</color>
+    <color name="chat_bubble_mine_text">#FF1C1B1A</color>
+    <color name="chat_bubble_theirs_text">#FF1C1B1A</color>
+    <color name="chat_nickname_default">#FF3A6EA5</color>
+    <color name="chat_narration_text">#FF5F6368</color>
+    <color name="chat_narration_background">#33FFFFFF</color>
+    <color name="chat_event_text">#FF5F6368</color>
+    <color name="chat_input_background">#FFFFFFFF</color>
+    <color name="chat_system_bar">#FFF5F5F4</color>
+
+    <!-- 状态色 -->
+    <color name="status_success">#FF1E8E3E</color>
+    <color name="status_error">#FFD93025</color>
+    <color name="status_warning">#FFF9AB00</color>
+
+    <!-- ===== S9 群聊设计色板（架构设计规范）===== -->
+    <color name="s9_page_background">#FFEEF1ED</color>
+    <color name="s9_top_bar">#FAFCF9</color>
+    <color name="s9_message_overlay">#CCFFFFFF</color>
+    <color name="s9_my_bubble">#FFB8E6C1</color>
+    <color name="s9_my_text">#FF24352A</color>
+    <color name="s9_npc_bubble">#FFFFFDF8</color>
+    <color name="s9_npc_text">#FF303030</color>
+    <color name="s9_npc_border">#FFE8E0D5</color>
+    <color name="s9_narration_text">#FF7B7B76</color>
+    <color name="s9_narration_bg">#CCFFFFFF</color>
+    <color name="s9_event_bg">#B8FFFFFF</color>
+    <color name="s9_event_text">#FF888888</color>
+    <color name="s9_primary">#FF4F9D69</color>
+    <color name="s9_secondary">#FFC88A4A</color>
+    <color name="s9_divider">#FFDDE2DC</color>
+    <color name="s9_error">#FFB94A48</color>
+    <color name="s9_group_name">#FF2F332F</color>
+    <color name="s9_identity_subtitle">#FF77766F</color>
+    <color name="s9_npc_name">#FF846044</color>
+    <color name="s9_input_bg">#FFF3F4F2</color>
+    <color name="s9_input_hint">#FF969B96</color>
+    <color name="s9_status_bg">#EFFFFFFF</color>
+    <color name="s9_dot">#FF4F9D69</color>
+    <color name="s9_stop">#FFB94A48</color>
+    <color name="s9_action_text">#FF77766F</color>
+    <color name="s9_avatar_border">#FFFFFFFF</color>
+
+    <!-- 深色主题（浅色模式下这些名称对应浅色值，避免引用缺失） -->
+    <color name="surface_dark">#FF141218</color>
+    <color name="surface_variant_dark">#FF49454F</color>
+    <color name="on_surface_dark">#FFE6E0E9</color>
+    <color name="on_surface_variant_dark">#FFCAC4D0</color>
+    <color name="outline_dark">#FF938F99</color>
+    <color name="background_dark">#FF141218</color>
+
+    <!-- 文本 -->
+    <color name="text_primary">#FF1C1B1A</color>
+    <color name="text_secondary">#FF49454F</color>
+    <color name="text_disabled">#FF9E9E9E</color>
+    <color name="text_on_primary">#FFFFFFFF</color>
+    <color name="text_on_dark">#FFFFFFFF</color>
+</resources>

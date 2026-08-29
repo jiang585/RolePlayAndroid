@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/screen_margin">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_ai_enhance_world"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/world_ai_enhance"
+            style="@style/Widget.RolePlayChat.Button"
+            app:icon="@android:drawable/ic_menu_edit" />
+
+        <ProgressBar
+            android:id="@+id/progress_world_ai"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_s"
+            android:indeterminate="true"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/text_world_ai_progress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xs"
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/text_caption"
+            android:visibility="gone" />
+
+        <EditText
+            android:id="@+id/input_world_era"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_l"
+            android:hint="@string/world_era_hint"
+            android:textSize="@dimen/text_body"
+            android:inputType="text"
+            android:maxLines="2" />
+
+        <EditText
+            android:id="@+id/input_world_location"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_m"
+            android:hint="@string/world_location_hint"
+            android:textSize="@dimen/text_body"
+            android:inputType="text"
+            android:maxLines="2" />
+
+        <EditText
+            android:id="@+id/input_world_factions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_m"
+            android:hint="@string/world_factions"
+            android:textSize="@dimen/text_body"
+            android:inputType="textMultiLine"
+            android:minLines="2" />
+
+        <EditText
+            android:id="@+id/input_world_rules"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_m"
+            android:hint="@string/world_rules"
+            android:textSize="@dimen/text_body"
+            android:inputType="textMultiLine"
+            android:minLines="2" />
+
+        <EditText
+            android:id="@+id/input_world_story_hook"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_m"
+            android:hint="@string/world_story_hook"
+            android:textSize="@dimen/text_body"
+            android:inputType="textMultiLine"
+            android:minLines="2" />
+
+        <EditText
+            android:id="@+id/input_world_background"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_m"
+            android:hint="@string/world_background"
+            android:textSize="@dimen/text_body"
+            android:inputType="textMultiLine"
+            android:minLines="6" />
+
+        <EditText
+            android:id="@+id/input_world_tags"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_m"
+            android:hint="@string/world_tags"
+            android:textSize="@dimen/text_body"
+            android:inputType="text"
+            android:maxLines="2" />
+
+        <EditText
+            android:id="@+id/input_world_version_note"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_m"
+            android:hint="@string/world_version_note"
+            android:textSize="@dimen/text_body"
+            android:inputType="text"
+            android:maxLines="2" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_save_world"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xl"
+            android:text="@string/action_save"
+            style="@style/Widget.RolePlayChat.Button" />
+    </LinearLayout>
+</ScrollView>

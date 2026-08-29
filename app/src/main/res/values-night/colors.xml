@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- 品牌色（深色模式适配） -->
+    <color name="brand_primary">#FF4E8F83</color>
+    <color name="brand_primary_dark">#FF2A6B5E</color>
+    <color name="brand_primary_light">#FF6FB0A4</color>
+    <color name="brand_on_primary">#FF001F1B</color>
+    <color name="brand_secondary">#FFE2B93B</color>
+    <color name="brand_surface">#FF141218</color>
+    <color name="brand_background">#FF100E14</color>
+    <color name="brand_surface_variant">#FF49454F</color>
+    <color name="brand_on_surface">#FFE6E0E9</color>
+    <color name="brand_on_surface_variant">#FFCAC4D0</color>
+    <color name="brand_outline">#FF938F99</color>
+
+    <!-- 聊天界面 -->
+    <color name="chat_background_default">#FF1C1B1F</color>
+    <color name="chat_bubble_mine">#FF3E5C4F</color>
+    <color name="chat_bubble_theirs">#FF2B2A2E</color>
+    <color name="chat_bubble_mine_text">#FFE6E0E9</color>
+    <color name="chat_bubble_theirs_text">#FFE6E0E9</color>
+    <color name="chat_nickname_default">#FF9CC9FF</color>
+    <color name="chat_narration_text">#FFBDBDBD</color>
+    <color name="chat_narration_background">#33FFFFFF</color>
+    <color name="chat_event_text">#FFBDBDBD</color>
+    <color name="chat_input_background">#FF2B2A2E</color>
+    <color name="chat_system_bar">#FF100E14</color>
+
+    <!-- 状态色 -->
+    <color name="status_success">#FF81C995</color>
+    <color name="status_error">#FFF28B82</color>
+    <color name="status_warning">#FFFDE293</color>
+
+    <!-- 文本 -->
+    <color name="text_primary">#FFE6E0E9</color>
+    <color name="text_secondary">#FFCAC4D0</color>
+    <color name="text_disabled">#FF79747E</color>
+    <color name="text_on_primary">#FF001F1B</color>
+    <color name="text_on_dark">#FFFFFFFF</color>
+</resources>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="start"
+    android:paddingVertical="@dimen/space_xs"
+    android:paddingStart="@dimen/space_xs"
+    android:paddingEnd="72dp">
+
+    <ImageView
+        android:id="@+id/iv_avatar"
+        android:layout_width="@dimen/s9_avatar_npc"
+        android:layout_height="@dimen/s9_avatar_npc"
+        android:layout_gravity="top"
+        android:background="@drawable/bg_avatar_circle"
+        android:contentDescription="@string/character_avatar"
+        android:padding="1dp"
+        android:src="@drawable/ic_avatar_placeholder" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/space_s"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tv_nickname"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/space_s"
+            android:textColor="@color/s9_npc_name"
+            android:textSize="@dimen/s9_npc_name_size"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_message_content"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xs"
+            android:background="@drawable/bg_bubble_theirs"
+            android:maxWidth="@dimen/chat_bubble_max_width"
+            android:paddingHorizontal="@dimen/space_m"
+            android:paddingVertical="@dimen/space_s"
+            android:textColor="@color/s9_npc_text"
+            android:textSize="@dimen/s9_message_size" />
+    </LinearLayout>
+</LinearLayout>

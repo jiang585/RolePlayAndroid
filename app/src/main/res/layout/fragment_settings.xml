@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_page_warm"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/screen_margin"
+        android:paddingBottom="32dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_api"
+            android:textSize="@dimen/text_title"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_m"
+            style="@style/Widget.RolePlayChat.Card">
+
+            <Spinner
+                android:id="@+id/input_provider"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:contentDescription="@string/settings_provider"
+                android:paddingHorizontal="@dimen/space_m" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <EditText
+            android:id="@+id/input_base_url"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_m"
+            android:hint="@string/settings_base_url_hint"
+            android:inputType="textUri"
+            android:textSize="@dimen/text_body"
+            android:backgroundTint="@color/brand_outline" />
+
+        <EditText
+            android:id="@+id/input_api_key"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_m"
+            android:hint="@string/settings_api_key_hint"
+            android:inputType="textPassword"
+            android:textSize="@dimen/text_body"
+            android:backgroundTint="@color/brand_outline" />
+
+        <EditText
+            android:id="@+id/input_model"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_m"
+            android:hint="@string/settings_model_hint"
+            android:inputType="text"
+            android:textSize="@dimen/text_body"
+            android:backgroundTint="@color/brand_outline" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_m"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/input_temperature"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="@string/settings_temperature"
+                android:inputType="numberDecimal"
+                android:textSize="@dimen/text_body"
+                android:backgroundTint="@color/brand_outline" />
+
+            <EditText
+                android:id="@+id/input_top_p"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="@dimen/space_m"
+                android:hint="@string/settings_top_p"
+                android:inputType="numberDecimal"
+                android:textSize="@dimen/text_body"
+                android:backgroundTint="@color/brand_outline" />
+
+            <EditText
+                android:id="@+id/input_max_tokens"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="@dimen/space_m"
+                android:hint="@string/settings_max_tokens"
+                android:inputType="number"
+                android:textSize="@dimen/text_body"
+                android:backgroundTint="@color/brand_outline" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_l"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_save_settings"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/action_save"
+                style="@style/Widget.RolePlayChat.Button" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_test_connection"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="@dimen/space_s"
+                android:text="@string/settings_test_connection"
+                style="@style/Widget.RolePlayChat.Button.Quiet" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/section_gap"
+            android:text="@string/settings_data"
+            android:textSize="@dimen/text_title"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_clear_chat"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_m"
+            android:text="@string/settings_clear_chat"
+            style="@style/Widget.RolePlayChat.Button.Quiet" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/section_gap"
+            android:text="@string/settings_about"
+            android:textSize="@dimen/text_title"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_s"
+            android:text="@string/settings_about_text"
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/text_body" />
+    </LinearLayout>
+</ScrollView>

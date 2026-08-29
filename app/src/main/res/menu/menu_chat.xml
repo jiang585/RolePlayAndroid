@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/menu_chat_members"
+        android:icon="@drawable/ic_group"
+        android:title="@string/chat_members"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/menu_chat_appearance"
+        android:icon="@drawable/ic_palette"
+        android:title="@string/chat_appearance"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/menu_chat_more"
+        android:icon="@drawable/ic_more_vert"
+        android:title="@string/chat_more"
+        app:showAsAction="ifRoom">
+
+        <menu>
+            <item
+                android:id="@+id/menu_chat_export"
+                android:title="@string/chat_export" />
+            <item
+                android:id="@+id/menu_chat_clear"
+                android:title="@string/settings_clear_chat" />
+        </menu>
+    </item>
+</menu>

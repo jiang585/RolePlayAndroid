@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/screen_margin">
+
+        <ImageView
+            android:id="@+id/iv_edit_avatar"
+            android:layout_width="@dimen/avatar_size_large"
+            android:layout_height="@dimen/avatar_size_large"
+            android:layout_gravity="center_horizontal"
+            android:contentDescription="@string/character_avatar_change"
+            android:src="@drawable/ic_avatar_placeholder" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_ai_enhance_character"
+            style="@style/Widget.RolePlayChat.Button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_l"
+            android:text="@string/character_ai_enhance" />
+
+        <ProgressBar
+            android:id="@+id/progress_character_ai"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_s"
+            android:indeterminate="true"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/text_character_ai_progress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xs"
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/text_caption"
+            android:visibility="gone" />
+
+        <EditText
+            android:id="@+id/input_char_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_m"
+            android:hint="@string/character_name_hint"
+            android:textSize="@dimen/text_body"
+            android:maxLength="80" />
+
+        <EditText
+            android:id="@+id/input_char_aliases"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_m"
+            android:hint="@string/character_aliases"
+            android:textSize="@dimen/text_body"
+            android:inputType="text"
+            android:maxLines="2" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_m"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/input_char_gender"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="@string/character_gender"
+                android:textSize="@dimen/text_body" />
+
+            <EditText
+                android:id="@+id/input_char_age"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="@dimen/space_m"
+                android:hint="@string/character_age"
+                android:textSize="@dimen/text_body" />
+        </LinearLayout>
+
+        <EditText
+            android:id="@+id/input_char_personality"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_m"
+            android:hint="@string/character_personality"
+            android:textSize="@dimen/text_body"
+            android:inputType="textMultiLine"
+            android:minLines="3" />
+
+        <EditText
+            android:id="@+id/input_char_backstory"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_m"
+            android:hint="@string/character_backstory"
+            android:textSize="@dimen/text_body"
+            android:inputType="textMultiLine"
+            android:minLines="4" />
+
+        <EditText
+            android:id="@+id/input_char_speaking_style"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_m"
+            android:hint="@string/character_speaking_style"
+            android:textSize="@dimen/text_body"
+            android:inputType="textMultiLine"
+            android:minLines="2" />
+
+        <EditText
+            android:id="@+id/input_char_catchphrases"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_m"
+            android:hint="@string/character_catchphrases"
+            android:textSize="@dimen/text_body"
+            android:inputType="textMultiLine"
+            android:minLines="2" />
+
+        <EditText
+            android:id="@+id/input_char_strengths"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_m"
+            android:hint="@string/character_strengths"
+            android:textSize="@dimen/text_body"
+            android:inputType="textMultiLine"
+            android:minLines="2" />
+
+        <EditText
+            android:id="@+id/input_char_flaws"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_m"
+            android:hint="@string/character_flaws"
+            android:textSize="@dimen/text_body"
+            android:inputType="textMultiLine"
+            android:minLines="2" />
+
+        <EditText
+            android:id="@+id/input_char_relationships"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_m"
+            android:hint="@string/character_relationships"
+            android:textSize="@dimen/text_body"
+            android:inputType="textMultiLine"
+            android:minLines="2" />
+
+        <EditText
+            android:id="@+id/input_char_sample_lines"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_m"
+            android:hint="@string/character_sample_lines"
+            android:textSize="@dimen/text_body"
+            android:inputType="textMultiLine"
+            android:minLines="2" />
+
+        <EditText
+            android:id="@+id/input_char_system_prompt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_m"
+            android:hint="@string/character_system_prompt"
+            android:textSize="@dimen/text_body"
+            android:inputType="textMultiLine"
+            android:minLines="2" />
+
+        <EditText
+            android:id="@+id/input_char_hidden_setting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_m"
+            android:hint="@string/character_hidden_setting"
+            android:textSize="@dimen/text_body"
+            android:inputType="textMultiLine"
+            android:minLines="2" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_save_character"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xl"
+            android:text="@string/action_save"
+            style="@style/Widget.RolePlayChat.Button" />
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="@dimen/screen_margin">
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_pick_card_file"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/character_import_from_file"
+        style="@style/Widget.RolePlayChat.Button" />
+
+    <TextView
+        android:id="@+id/tv_import_preview"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="@dimen/space_l"
+        android:background="@drawable/bg_preview_box"
+        android:padding="@dimen/space_l"
+        android:textColor="@color/text_primary"
+        android:textSize="@dimen/text_body" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_confirm_import"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_l"
+        android:text="@string/character_import_confirm"
+        style="@style/Widget.RolePlayChat.Button" />
+</LinearLayout>
