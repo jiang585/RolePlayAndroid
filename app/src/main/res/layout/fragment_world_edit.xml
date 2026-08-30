@@ -124,5 +124,13 @@
             android:layout_marginTop="@dimen/space_xl"
             android:text="@string/action_save"
             style="@style/Widget.RolePlayChat.Button" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_chat_rules"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_m"
+            android:text="@string/chat_rules"
+            style="@style/Widget.RolePlayChat.Button.Quiet" />
     </LinearLayout>
 </ScrollView>

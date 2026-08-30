@@ -19,4 +19,21 @@ public class KeystoreSecretStoreTest {
         store.removeSecret("api_key");
         assertFalse(store.hasSecret("api_key"));
     }
+
+    @Test
+    public void multipleAliases_areIsolated() {
+        KeystoreSecretStore store = new KeystoreSecretStore((android.content.SharedPreferences) null);
+
+        store.putSecret("api_key_profile-a", "key-a");
+        store.putSecret("api_key_profile-b", "key-b");
+
+        assertEquals("key-a", store.getSecret("api_key_profile-a"));
+        assertEquals("key-b", store.getSecret("api_key_profile-b"));
+
+        // 删除一个别名不影响另一个
+        store.removeSecret("api_key_profile-a");
+        assertFalse(store.hasSecret("api_key_profile-a"));
+        assertTrue(store.hasSecret("api_key_profile-b"));
+        assertEquals("key-b", store.getSecret("api_key_profile-b"));
+    }
 }

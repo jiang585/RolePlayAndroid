@@ -102,7 +102,14 @@ public class ScriptRepositoryImpl implements ScriptRepository {
     @Override
     public PlayerIdentity getPlayerIdentity(String scriptId) {
         SessionMemberEntity member = db.sessionMemberDao().getActivePlayer(scriptId);
-        return member == null ? null : EntityMapper.toIdentity(member);
+        PlayerIdentity identity = EntityMapper.toIdentity(member);
+        if (identity != null && identity.getCharacterId() != null
+                && db.characterDao().getById(identity.getCharacterId()) == null) {
+            // 防御：绑定的角色已被硬删除时回退观察者，避免空身份阻塞后续发言。
+            return new PlayerIdentity(scriptId, PlayerIdentity.RoleType.OBSERVER, null,
+                    identity.getChangedAt());
+        }
+        return identity;
     }
 
     @Override

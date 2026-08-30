@@ -82,9 +82,32 @@ public class CharacterRepositoryImpl implements CharacterRepository {
     }
 
     @Override
-    public void deleteCharacter(String characterId) {
-        // 产品语义中的“删除角色”是离群：保留角色卡与历史消息，只停止参与后续编排。
+    public void disableCharacter(String characterId) {
+        // 软停用：保留角色卡与历史消息，只停止参与后续编排。
         setEnabled(characterId, false, System.currentTimeMillis());
+    }
+
+    @Override
+    public void deleteCharacter(String characterId) {
+        // 硬删除：session_members 外键为 RESTRICT，必须先清理成员行；
+        // 消息外键为 SET_NULL，历史靠 sender_*_snapshot 字段继续显示。
+        db.runInTransaction(() -> {
+            CharacterEntity entity = dao.getById(characterId);
+            if (entity == null) {
+                return;
+            }
+            com.example.roleplaychat.data.local.entity.SessionMemberEntity member =
+                    db.sessionMemberDao().getMemberByCharacter(entity.script_id, characterId);
+            boolean wasActivePlayer = member != null && member.active
+                    && com.example.roleplaychat.data.local.entity.SessionMemberEntity.MEMBER_PLAYER
+                    .equals(member.member_type);
+            db.sessionMemberDao().deleteByCharacter(entity.script_id, characterId);
+            if (wasActivePlayer) {
+                // 玩家身份随角色一起消失，回退到观察者席，避免聊天页出现空身份。
+                db.sessionMemberDao().activateObserverSlot(entity.script_id);
+            }
+            dao.deleteById(characterId);
+        });
     }
 
     @Override

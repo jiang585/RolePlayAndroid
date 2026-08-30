@@ -41,6 +41,9 @@
     <string name="script_delete_confirm">删除剧本将永久删除其中的角色、消息与装扮，确定删除「%1$s」吗？</string>
     <string name="script_created">剧本已创建</string>
     <string name="script_saved">剧本已保存</string>
+    <string name="script_cover">封面</string>
+    <string name="script_cover_clear">清除封面</string>
+    <string name="script_cover_import_failed">封面导入失败</string>
 
     <!-- 剧本详情 -->
     <string name="script_detail_title">剧本详情</string>
@@ -97,6 +100,12 @@
     <string name="character_enable">启用</string>
     <string name="character_disable">停用</string>
     <string name="character_deactivate_confirm">停用「%1$s」后，AI 将不再安排其发言，历史消息保留。确定停用吗？</string>
+    <string name="character_delete_menu">删除角色</string>
+    <string name="character_disable_menu">停用角色</string>
+    <string name="character_delete_confirm">角色卡将被永久删除，历史消息保留但不再关联该角色。确定删除「%1$s」吗？</string>
+    <string name="character_deleted">角色已删除</string>
+    <string name="character_disabled">角色已停用</string>
+    <string name="character_disable_notice">停用后保留角色卡，不参与后续演出，可随时重新启用</string>
     <string name="character_saved">角色已保存</string>
     <string name="character_ai_enhance">AI 完善设定</string>
     <string name="character_ai_hint">用一段话描述这个角色，AI 会补全性格、背景与说话风格</string>
@@ -144,6 +153,13 @@
     <string name="chat_member_dialog_title">群成员（%1$d）</string>
     <string name="chat_member_count">%1$d位成员</string>
     <string name="chat_clear_confirm">清空本群全部聊天记录？</string>
+    <string name="chat_rules">对话设定</string>
+    <string name="chat_rules_title">对话设定</string>
+    <string name="chat_rules_directive">扮演要求（每次回复都必须遵守）</string>
+    <string name="chat_rules_directive_hint">例：文风简练，多用动作与神态描写；每次回复不超过两句话；禁止替玩家角色做决定或发言；主角说话带讽刺。</string>
+    <string name="chat_rules_max_responders">每轮最多回复角色数</string>
+    <string name="chat_rules_max_responders_note">不 @ 任何人时，一轮内最多由该数量的角色开口；@ 某个角色仍由其单独回复。设定对自动续演同样生效。</string>
+    <string name="chat_rules_saved">对话设定已保存</string>
 
     <!-- 装扮 -->
     <string name="appearance_title">装扮设置</string>
@@ -187,6 +203,18 @@
     <string name="settings_context_recent">最近消息条数</string>
     <string name="settings_about">关于</string>
     <string name="settings_about_text">RolePlayChat v1.0\n多人角色扮演群聊</string>
+    <string name="settings_profiles">配置档案</string>
+    <string name="settings_profile_add">＋ 新增配置</string>
+    <string name="settings_profile_name_hint">配置名称（如：DeepSeek 主力）</string>
+    <string name="settings_profile_activate">设为当前</string>
+    <string name="settings_profile_active">当前使用</string>
+    <string name="settings_save_profile">保存此档案</string>
+    <string name="settings_profile_enable_and_save">启用并保存</string>
+    <string name="settings_profile_saved">配置档案已保存</string>
+    <string name="settings_profile_activated">已切换启用配置</string>
+    <string name="settings_profile_deleted">配置已删除</string>
+    <string name="settings_profile_delete_confirm">删除配置「%1$s」？其密钥也将一并删除。</string>
+    <string name="settings_profile_test_note">测试连接仅验证表单当前内容，不会改动已启用的配置</string>
 
     <!-- 导入导出 -->
     <string name="import_export_title">导入 / 导出</string>

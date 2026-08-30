@@ -22,6 +22,9 @@
 
         <menu>
             <item
+                android:id="@+id/menu_chat_rules"
+                android:title="@string/chat_rules" />
+            <item
                 android:id="@+id/menu_chat_export"
                 android:title="@string/chat_export" />
             <item

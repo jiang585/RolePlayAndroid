@@ -175,6 +175,9 @@ public class ChatFragment extends Fragment {
         } else if (id == R.id.menu_chat_appearance) {
             navigateToAppearance();
             return true;
+        } else if (id == R.id.menu_chat_rules) {
+            navigateToChatRules();
+            return true;
         } else if (id == R.id.menu_chat_export) {
             chooseChatExportFormat();
             return true;
@@ -255,6 +258,14 @@ public class ChatFragment extends Fragment {
         Bundle args = new Bundle();
         args.putString("scriptId", scriptId);
         navController.navigate(R.id.action_chat_to_appearance, args);
+    }
+
+    private void navigateToChatRules() {
+        androidx.navigation.NavController navController =
+                androidx.navigation.Navigation.findNavController(requireView());
+        Bundle args = new Bundle();
+        args.putString("scriptId", scriptId);
+        navController.navigate(R.id.action_chat_to_chatRuleEdit, args);
     }
 
     private void confirmClearChat() {

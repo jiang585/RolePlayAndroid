@@ -12,6 +12,7 @@ import com.example.roleplaychat.ui.identity.IdentityViewModel;
 import com.example.roleplaychat.ui.script.ScriptEditViewModel;
 import com.example.roleplaychat.ui.script.ScriptListViewModel;
 import com.example.roleplaychat.ui.settings.SettingsViewModel;
+import com.example.roleplaychat.ui.world.ChatRuleEditViewModel;
 import com.example.roleplaychat.ui.world.WorldEditViewModel;
 
 /**
@@ -35,12 +36,16 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
         }
         if (modelClass.isAssignableFrom(ScriptEditViewModel.class)) {
             return (T) new ScriptEditViewModel(container.scriptRepository,
-                    container.createScriptUseCase, container.executors);
+                    container.createScriptUseCase, container.imageImporter, container.executors);
         }
         if (modelClass.isAssignableFrom(WorldEditViewModel.class)) {
             return (T) new WorldEditViewModel(container.worldRepository,
                     container.scriptRepository, container.aiRepository,
                     container.settingsRepository, container.executors);
+        }
+        if (modelClass.isAssignableFrom(ChatRuleEditViewModel.class)) {
+            return (T) new ChatRuleEditViewModel(container.worldRepository,
+                    container.scriptRepository, container.executors);
         }
         if (modelClass.isAssignableFrom(CharacterEditViewModel.class)) {
             return (T) new CharacterEditViewModel(container.characterRepository,

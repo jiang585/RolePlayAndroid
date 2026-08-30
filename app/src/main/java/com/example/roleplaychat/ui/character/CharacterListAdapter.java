@@ -25,11 +25,24 @@ public class CharacterListAdapter extends ListAdapter<CharacterProfile, Characte
         void onCharacterClick(CharacterProfile character);
     }
 
+    /** 长按回调：用于触发删除/停用等管理操作。 */
+    public interface OnCharacterLongClickListener {
+        void onCharacterLongClick(CharacterProfile character);
+    }
+
     private final Listener listener;
+    @androidx.annotation.Nullable
+    private final OnCharacterLongClickListener longClickListener;
 
     public CharacterListAdapter(Listener listener) {
+        this(listener, null);
+    }
+
+    public CharacterListAdapter(Listener listener,
+                                @androidx.annotation.Nullable OnCharacterLongClickListener longClickListener) {
         super(DIFF);
         this.listener = listener;
+        this.longClickListener = longClickListener;
     }
 
     private static final DiffUtil.ItemCallback<CharacterProfile> DIFF =
@@ -83,6 +96,12 @@ public class CharacterListAdapter extends ListAdapter<CharacterProfile, Characte
         }
 
         holder.itemView.setOnClickListener(v -> listener.onCharacterClick(character));
+        if (longClickListener != null) {
+            holder.itemView.setOnLongClickListener(v -> {
+                longClickListener.onCharacterLongClick(character);
+                return true;
+            });
+        }
     }
 
     private String buildSubtitle(CharacterProfile character) {

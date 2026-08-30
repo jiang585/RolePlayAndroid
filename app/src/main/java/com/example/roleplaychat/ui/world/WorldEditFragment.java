@@ -64,6 +64,7 @@ public class WorldEditFragment extends Fragment {
         bindViews(view);
         saveButton.setOnClickListener(v -> save());
         aiEnhanceButton.setOnClickListener(v -> showAiEnhanceDialog());
+        view.findViewById(R.id.btn_chat_rules).setOnClickListener(v -> navigateToChatRules());
 
         viewModel.getWorld().observe(getViewLifecycleOwner(), this::populate);
         viewModel.getEvents().observe(getViewLifecycleOwner(), this::handleEvent);
@@ -107,6 +108,14 @@ public class WorldEditFragment extends Fragment {
                 textOf(eraInput), textOf(locationInput), textOf(factionsInput), textOf(rulesInput),
                 textOf(storyHookInput), textOf(backgroundInput), textOf(tagsInput),
                 textOf(versionNoteInput), System.currentTimeMillis());
+    }
+
+    private void navigateToChatRules() {
+        androidx.navigation.NavController navController =
+                androidx.navigation.Navigation.findNavController(requireView());
+        Bundle args = new Bundle();
+        args.putString("scriptId", scriptId);
+        navController.navigate(R.id.action_worldEdit_to_chatRuleEdit, args);
     }
 
     private void showAiEnhanceDialog() {

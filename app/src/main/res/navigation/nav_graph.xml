@@ -69,6 +69,9 @@
         <argument
             android:name="scriptId"
             app:argType="string" />
+        <action
+            android:id="@+id/action_worldEdit_to_chatRuleEdit"
+            app:destination="@id/chatRuleEditFragment" />
     </fragment>
 
     <fragment
@@ -124,6 +127,18 @@
         <action
             android:id="@+id/action_chat_to_appearance"
             app:destination="@id/appearanceFragment" />
+        <action
+            android:id="@+id/action_chat_to_chatRuleEdit"
+            app:destination="@id/chatRuleEditFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/chatRuleEditFragment"
+        android:name="com.example.roleplaychat.ui.world.ChatRuleEditFragment"
+        android:label="@string/chat_rules_title">
+        <argument
+            android:name="scriptId"
+            app:argType="string" />
     </fragment>
 
     <fragment

@@ -118,6 +118,7 @@ public class ImportExportTest {
     @Test
     public void zipSlip_unsafeEntry_rejected() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
+        // 无 manifest 的恶意包：在 manifest 校验处即被拒绝。
         File zip = new File(context.getCacheDir(), "evil_" + System.nanoTime() + ".zip");
         try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zip))) {
             zos.putNextEntry(new ZipEntry("../evil.txt"));
@@ -128,11 +129,46 @@ public class ImportExportTest {
         target.mkdirs();
         String error = ScriptPackageArchive.extractTo(zip, target);
         assertNotNull(error);
-        assertTrue(error.contains("unsafe"));
         zip.delete();
         com.example.roleplaychat.data.file.LocalAssetStore store =
                 new LocalAssetStore(context);
         store.deleteRecursively(target);
+
+        // 带 manifest 但声明越界条目：必须走到 Zip Slip 路径检查并返回 unsafe。
+        File zipWithManifest = new File(context.getCacheDir(),
+                "evil_manifest_" + System.nanoTime() + ".zip");
+        String payload = "boom";
+        String sha256 = sha256Hex(payload.getBytes(StandardCharsets.UTF_8));
+        String manifest = "{\"format\":\"roleplay-script-package\",\"schema_version\":1,"
+                + "\"files\":{\"../evil.txt\":{\"size\":" + payload.length()
+                + ",\"sha256\":\"" + sha256 + "\"}}}";
+        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipWithManifest))) {
+            zos.putNextEntry(new ZipEntry("manifest.json"));
+            zos.write(manifest.getBytes(StandardCharsets.UTF_8));
+            zos.closeEntry();
+            zos.putNextEntry(new ZipEntry("../evil.txt"));
+            zos.write(payload.getBytes(StandardCharsets.UTF_8));
+            zos.closeEntry();
+        }
+        File target2 = new File(context.getCacheDir(), "extract2_" + System.nanoTime());
+        target2.mkdirs();
+        String unsafeError = ScriptPackageArchive.extractTo(zipWithManifest, target2);
+        assertNotNull(unsafeError);
+        // 新版平台的 ZipInputStream 会在库层直接拒绝（"Invalid zip entry path"），
+        // 旧版走到应用层校验返回 "unsafe path"；两者都证明恶意路径未被解压。
+        assertTrue("应拒绝越界路径，实际返回：" + unsafeError,
+                unsafeError.contains("unsafe") || unsafeError.contains("Invalid zip entry path"));
+        zipWithManifest.delete();
+        store.deleteRecursively(target2);
+    }
+
+    private static String sha256Hex(byte[] bytes) throws Exception {
+        java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+        StringBuilder sb = new StringBuilder();
+        for (byte b : digest.digest(bytes)) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
     }
 
     @Test

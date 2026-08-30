@@ -24,7 +24,7 @@ import com.example.roleplaychat.data.local.entity.SessionMemberEntity;
 import com.example.roleplaychat.data.local.entity.WorldSettingEntity;
 
 /**
- * 数据库（架构文档 §6.1）：库名 role_play_chat.db，初始版本 1。
+ * 数据库（架构文档 §6.1）：库名 role_play_chat.db，当前版本 2。
  * 禁止 fallbackToDestructiveMigration；schema 变化必须提供迁移与测试。
  */
 @Database(entities = {
@@ -35,7 +35,7 @@ import com.example.roleplaychat.data.local.entity.WorldSettingEntity;
         MessageEntity.class,
         AppearanceEntity.class,
         ImportLogEntity.class
-}, version = 1, exportSchema = true)
+}, version = 2, exportSchema = true)
 @TypeConverters(RoomConverters.class)
 public abstract class AppDatabase extends RoomDatabase {
 

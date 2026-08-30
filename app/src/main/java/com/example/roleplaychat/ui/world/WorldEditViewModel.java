@@ -87,6 +87,10 @@ public class WorldEditViewModel extends ViewModel {
                     emptyToNull(background),
                     splitLines(tagsText),
                     emptyToNull(versionNote),
+                    // 对话规则在本页之外维护（聊天页"对话设定"），保存世界观时必须保留。
+                    current == null ? null : current.getChatStyleDirective(),
+                    current == null ? com.example.roleplaychat.domain.model.WorldSetting.DEFAULT_MAX_RESPONDERS
+                            : current.getMaxRespondersPerTurn(),
                     now);
             worldRepository.save(updated);
             scriptRepository.touchUpdatedAt(scriptId, now);

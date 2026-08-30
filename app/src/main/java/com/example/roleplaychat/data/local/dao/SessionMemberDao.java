@@ -49,6 +49,9 @@ public interface SessionMemberDao {
     @Query("UPDATE session_members SET active = 0 WHERE script_id = :scriptId AND character_id = :characterId")
     int deactivateByCharacter(String scriptId, String characterId);
 
+    @Query("DELETE FROM session_members WHERE script_id = :scriptId AND character_id = :characterId")
+    int deleteByCharacter(String scriptId, String characterId);
+
     @Query("UPDATE session_members SET active = 1, member_type = 'NPC' WHERE script_id = :scriptId AND character_id = :characterId")
     int activateNpc(String scriptId, String characterId);
 

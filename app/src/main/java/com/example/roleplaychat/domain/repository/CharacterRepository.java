@@ -23,6 +23,10 @@ public interface CharacterRepository {
     /** 停用角色（不删除历史）。 */
     void setEnabled(String characterId, boolean enabled, long now);
 
+    /** 停用角色：保留角色卡与历史消息，仅停止参与后续编排。 */
+    void disableCharacter(String characterId);
+
+    /** 永久删除角色：历史消息保留但不再关联该角色（character_id 置空，靠快照字段显示）。 */
     void deleteCharacter(String characterId);
 
     /** 剧本内下一个排序值。 */

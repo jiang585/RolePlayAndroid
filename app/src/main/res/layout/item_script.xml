@@ -22,6 +22,14 @@
             app:layout_constraintTop_toTopOf="parent">
 
             <ImageView
+                android:id="@+id/iv_script_cover"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@string/script_cover"
+                android:scaleType="centerCrop"
+                android:visibility="gone" />
+
+            <ImageView
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:layout_gravity="end|bottom"

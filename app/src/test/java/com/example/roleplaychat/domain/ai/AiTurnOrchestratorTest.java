@@ -42,8 +42,8 @@ public class AiTurnOrchestratorTest {
     @Before
     public void setUp() {
         ScriptRepository scripts = mock(ScriptRepository.class);
-        WorldRepository worlds = mock(WorldRepository.class);
-        CharacterRepository characters = mock(CharacterRepository.class);
+        worlds = mock(WorldRepository.class);
+        characters = mock(CharacterRepository.class);
         chats = mock(ChatRepository.class);
         settings = mock(SettingsRepository.class);
         when(characters.getEnabledByScriptId(anyString())).thenReturn(Collections.emptyList());
@@ -109,6 +109,42 @@ public class AiTurnOrchestratorTest {
         assertTrue(messages.get(1).getContent().contains("现在出发"));
     }
 
+    @Test
+    public void start_withoutMention_injectsPaceConstraintsAndStyleDirectiveIntoSystemPrompt() {
+        com.example.roleplaychat.domain.model.WorldSetting world =
+                new com.example.roleplaychat.domain.model.WorldSetting("w1", "script-1",
+                        null, null, Collections.emptyList(), Collections.emptyList(),
+                        null, null, Collections.emptyList(), null,
+                        "文风简练", 3, 1L);
+        when(worlds.getByScriptId("script-1")).thenReturn(world);
+        when(chats.loadAll("script-1")).thenReturn(java.util.Arrays.asList(
+                npcMessage("m1", 1, "char-a", "张三", "我先说"),
+                npcMessage("m2", 2, "char-b", "李四", "然后我说")));
+        when(characters.getEnabledByScriptId("script-1")).thenReturn(Collections.emptyList());
+
+        String requestId = start("script-1");
+        String system = aiRepository.request(requestId).getMessages().get(0).getContent();
+
+        assertTrue(system.contains("【用户扮演要求"));
+        assertTrue(system.contains("文风简练"));
+        assertTrue(system.contains("本轮最多 3 名角色回复"));
+        assertTrue(system.contains("张三、李四"));
+    }
+
+    private WorldRepository worlds;
+    private CharacterRepository characters;
+
+    private com.example.roleplaychat.domain.model.ChatMessage npcMessage(
+            String id, long sequence, String characterId, String sender, String content) {
+        return com.example.roleplaychat.domain.model.ChatMessage.builder().id(id)
+                .scriptId("script-1")
+                .characterId(characterId)
+                .type(com.example.roleplaychat.domain.model.ChatMessage.Type.CHARACTER_TEXT)
+                .side(com.example.roleplaychat.domain.model.ChatMessage.Side.THEIRS)
+                .senderDisplayName(sender).content(content).sequence(sequence)
+                .createdAt(sequence).build();
+    }
+
     private String start(String scriptId) {
         return orchestrator.start(scriptId, AiRequest.Mode.NORMAL_REPLY, 0, null,
                 mock(AiTurnOrchestrator.Callback.class));
@@ -135,6 +171,8 @@ public class AiTurnOrchestratorTest {
         }
 
         @Override public AppErrorCode testConnection() { return null; }
+
+        @Override public AppErrorCode testConnection(ApiConfig config) { return null; }
 
         @Override
         public CancellableRequest streamPrompt(String requestId, List<PromptMessage> messages,

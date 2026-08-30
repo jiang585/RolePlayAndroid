@@ -51,14 +51,16 @@ public final class EntityMapper {
         return new WorldSetting(e.id, e.script_id, e.era, e.location,
                 fromJsonList(e.factions_json), fromJsonList(e.rules_json),
                 e.story_hook, e.background_full, fromJsonList(e.tags_json),
-                e.version_note, e.updated_at);
+                e.version_note, e.chat_style_directive, e.max_responders_per_turn,
+                e.updated_at);
     }
 
     public static WorldSettingEntity toEntity(WorldSetting w) {
         return new WorldSettingEntity(w.getId(), w.getScriptId(), w.getEra(), w.getLocation(),
                 JsonUtils.toJson(w.getFactions()), JsonUtils.toJson(w.getRules()),
                 w.getStoryHook(), w.getBackgroundFull(), JsonUtils.toJson(w.getTags()),
-                w.getVersionNote(), w.getUpdatedAt());
+                w.getVersionNote(), w.getChatStyleDirective(), w.getMaxRespondersPerTurn(),
+                w.getUpdatedAt());
     }
 
     // ---------- Character ----------

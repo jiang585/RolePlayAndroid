@@ -20,6 +20,30 @@
             android:textStyle="bold"
             android:textColor="@color/text_primary" />
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_m"
+            android:text="@string/settings_profiles"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_profiles"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:overScrollMode="never"
+            android:nestedScrollingEnabled="false" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_add_profile"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="@string/settings_profile_add"
+            style="@style/Widget.RolePlayChat.Button.Quiet" />
+
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -33,6 +57,17 @@
                 android:contentDescription="@string/settings_provider"
                 android:paddingHorizontal="@dimen/space_m" />
         </com.google.android.material.card.MaterialCardView>
+
+        <EditText
+            android:id="@+id/input_profile_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_m"
+            android:hint="@string/settings_profile_name_hint"
+            android:inputType="text"
+            android:maxLength="40"
+            android:textSize="@dimen/text_body"
+            android:backgroundTint="@color/brand_outline" />
 
         <EditText
             android:id="@+id/input_base_url"
@@ -114,7 +149,16 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/action_save"
+                android:text="@string/settings_save_profile"
+                style="@style/Widget.RolePlayChat.Button" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_activate_save"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="@dimen/space_s"
+                android:text="@string/settings_profile_enable_and_save"
                 style="@style/Widget.RolePlayChat.Button" />
 
             <com.google.android.material.button.MaterialButton

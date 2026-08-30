@@ -9,6 +9,8 @@ import androidx.annotation.Nullable;
 
 /**
  * AI 上下文（架构文档 §8.1）：PromptAssembler 的输入。
+ * 含回复编排约束：每轮最多回复角色数（maxResponders）、剧本级扮演要求
+ * （styleDirective）与最近发言者名单（recentSpeakerNames，用于抑制连续发言）。
  */
 public final class AiContext {
 
@@ -23,6 +25,10 @@ public final class AiContext {
     @Nullable
     private final CharacterProfile mentionedCharacter;
     private final boolean automaticAdvance;
+    private final int maxResponders;
+    @Nullable
+    private final String styleDirective;
+    private final List<String> recentSpeakerNames;
 
     public AiContext(String scriptId, WorldSetting world, List<CharacterProfile> enabledNpcs,
                      PlayerIdentity playerIdentity, CharacterProfile playerCharacter,
@@ -43,6 +49,17 @@ public final class AiContext {
                      PlayerIdentity playerIdentity, CharacterProfile playerCharacter,
                      String recentConversationText, String language, int maxEvents,
                      @Nullable CharacterProfile mentionedCharacter, boolean automaticAdvance) {
+        this(scriptId, world, enabledNpcs, playerIdentity, playerCharacter,
+                recentConversationText, language, maxEvents, mentionedCharacter, automaticAdvance,
+                WorldSetting.DEFAULT_MAX_RESPONDERS, null, null);
+    }
+
+    public AiContext(String scriptId, WorldSetting world, List<CharacterProfile> enabledNpcs,
+                     PlayerIdentity playerIdentity, CharacterProfile playerCharacter,
+                     String recentConversationText, String language, int maxEvents,
+                     @Nullable CharacterProfile mentionedCharacter, boolean automaticAdvance,
+                     int maxResponders, @Nullable String styleDirective,
+                     @Nullable List<String> recentSpeakerNames) {
         this.scriptId = scriptId;
         this.world = world;
         this.enabledNpcs = enabledNpcs;
@@ -53,6 +70,10 @@ public final class AiContext {
         this.maxEvents = maxEvents;
         this.mentionedCharacter = mentionedCharacter;
         this.automaticAdvance = automaticAdvance;
+        this.maxResponders = Math.max(1, maxResponders);
+        this.styleDirective = styleDirective;
+        this.recentSpeakerNames = recentSpeakerNames == null
+                ? java.util.Collections.emptyList() : recentSpeakerNames;
     }
 
     public String getScriptId() {
@@ -94,5 +115,21 @@ public final class AiContext {
 
     public boolean isAutomaticAdvance() {
         return automaticAdvance;
+    }
+
+    /** 本轮最多回复角色数（@ 提及时不受此限）。 */
+    public int getMaxResponders() {
+        return maxResponders;
+    }
+
+    /** 剧本级扮演要求；null 表示未设置。 */
+    @Nullable
+    public String getStyleDirective() {
+        return styleDirective;
+    }
+
+    /** 最近刚发言的角色名（去重、按发言先后）。 */
+    public List<String> getRecentSpeakerNames() {
+        return recentSpeakerNames;
     }
 }

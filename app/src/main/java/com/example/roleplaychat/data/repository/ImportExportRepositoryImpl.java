@@ -107,6 +107,15 @@ public class ImportExportRepositoryImpl implements ImportExportRepository {
 
             textEntries.put("script.json", JsonUtils.toJson(script));
 
+            // 封面随包导出（assets/covers），导入端按 covers/ 目录还原。
+            if (script.cover_ref != null) {
+                File coverFile = assetStore.resolve(script.cover_ref);
+                if (coverFile != null) {
+                    assetEntries.put(LocalAssetStore.DIR_COVERS + "/" + coverFile.getName(),
+                            coverFile);
+                }
+            }
+
             WorldSetting world = loadWorld(scriptId);
             if (world != null) {
                 textEntries.put("world.json", JsonUtils.toJson(world));

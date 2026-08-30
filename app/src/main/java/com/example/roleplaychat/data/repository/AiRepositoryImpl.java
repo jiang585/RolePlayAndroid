@@ -81,25 +81,38 @@ public class AiRepositoryImpl implements AiRepository {
     @Override
     public AppErrorCode testConnection() {
         com.example.roleplaychat.domain.model.ApiConfig config = serviceFactory.currentConfig();
+        return testConnection(config);
+    }
+
+    @Override
+    public AppErrorCode testConnection(com.example.roleplaychat.domain.model.ApiConfig config) {
+        if (config == null) {
+            return AppErrorCode.UNKNOWN;
+        }
         if (config.getApiKey() == null || config.getApiKey().trim().isEmpty()) {
             return AppErrorCode.AUTH_INVALID;
         }
+        boolean deepSeekNative = config.getProvider()
+                == com.example.roleplaychat.domain.model.ApiConfig.Provider.DEEPSEEK;
         ChatCompletionRequestDto dto = new ChatCompletionRequestDto();
-        dto.model = serviceFactoryDefaultModel();
+        dto.model = config.getModel();
         dto.messages.add(new ChatCompletionRequestDto.Message("user", "ping"));
         dto.temperature = 0.2f;
         dto.topP = 1.0f;
         dto.stream = false;
         dto.maxTokens = 8;
-        if (isDeepSeekNative()) {
+        if (deepSeekNative) {
             dto.thinking = new ChatCompletionRequestDto.Thinking("disabled");
         }
         String json = JsonUtils.toJson(dto);
+        // 测试未启用的档案时不能复用带当前密钥的拦截器：使用独立客户端，直接在请求上附认证头。
         Request httpRequest = new Request.Builder()
-                .url(serviceFactory.baseUrl() + "chat/completions")
+                .url(OpenAiServiceFactory.normalizeBaseUrl(config.getBaseUrl())
+                        + "chat/completions")
+                .header("Authorization", "Bearer " + config.getApiKey())
                 .post(RequestBody.create(json, JSON))
                 .build();
-        try (Response response = serviceFactory.okHttpClient().newCall(httpRequest).execute()) {
+        try (Response response = testHttpClient().newCall(httpRequest).execute()) {
             if (!response.isSuccessful()) {
                 return mapHttpError(response.code());
             }
@@ -109,8 +122,16 @@ public class AiRepositoryImpl implements AiRepository {
         }
     }
 
-    private String serviceFactoryDefaultModel() {
-        return serviceFactory.model();
+    private static okhttp3.OkHttpClient testClient;
+
+    private static synchronized okhttp3.OkHttpClient testHttpClient() {
+        if (testClient == null) {
+            testClient = new okhttp3.OkHttpClient.Builder()
+                    .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+                    .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                    .build();
+        }
+        return testClient;
     }
 
     /** 是否直连 DeepSeek 官方 API（仅其识别 thinking 私有扩展）。 */

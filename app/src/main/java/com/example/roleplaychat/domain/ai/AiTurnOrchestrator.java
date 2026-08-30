@@ -34,6 +34,9 @@ import java.util.Set;
  */
 public final class AiTurnOrchestrator {
 
+    /** 参与发言频率抑制的最近 AI 消息条数。 */
+    private static final int RECENT_SPEAKER_WINDOW = 6;
+
     public interface Callback {
         default void onGenerationStarted(String requestId) {
         }
@@ -124,8 +127,15 @@ public final class AiTurnOrchestrator {
         CharacterProfile mentionedCharacter = findMentionedCharacter(recent, npcPool);
         String conversation = ContextWindowPolicy.toPromptContext(allMessages, recentCount);
 
+        // 剧本级对话规则：每轮回复上限与扮演要求；最近发言者用于抑制"轮流表态"。
+        int maxResponders = world == null ? WorldSetting.DEFAULT_MAX_RESPONDERS
+                : world.getMaxRespondersPerTurn();
+        String styleDirective = world == null ? null : world.getChatStyleDirective();
+        List<String> recentSpeakerNames = collectRecentSpeakerNames(allMessages, RECENT_SPEAKER_WINDOW);
+
         AiContext context = new AiContext(scriptId, world, npcPool, identity, playerCharacter,
-                conversation, language, 8, mentionedCharacter, mode == AiRequest.Mode.AUTO_ADVANCE);
+                conversation, language, 8, mentionedCharacter, mode == AiRequest.Mode.AUTO_ADVANCE,
+                maxResponders, styleDirective, recentSpeakerNames);
 
         List<PromptMessage> messages = PromptAssembler.buildMessages(context, requestId);
         com.example.roleplaychat.domain.model.ApiConfig config = settingsRepository.getApiConfig();
@@ -157,7 +167,7 @@ public final class AiTurnOrchestrator {
                     return;
                 }
                 handleComplete(requestId, scriptId, mode, recent, npcPool, mentionedCharacter,
-                        fullText, callback);
+                        maxResponders, fullText, callback);
             }
 
             @Override
@@ -231,8 +241,8 @@ public final class AiTurnOrchestrator {
 
     private void handleComplete(String requestId, String scriptId, AiRequest.Mode mode,
                                 List<ChatMessage> recent, List<CharacterProfile> npcPool,
-                                @Nullable CharacterProfile mentionedCharacter, String fullText,
-                                Callback callback) {
+                                @Nullable CharacterProfile mentionedCharacter, int maxResponders,
+                                String fullText, Callback callback) {
         try {
             AiBatch batch = StructuredOutputParser.parse(fullText, requestId, scriptId);
             batch = AiOutputValidator.normalizeCharacterReferences(batch, npcPool);
@@ -249,6 +259,9 @@ public final class AiTurnOrchestrator {
                     }
                 }
                 batch = new AiBatch(batch.getRequestId(), batch.getScriptId(), targeted, false);
+            } else {
+                // 不 @ 时执行人数上限硬约束（@ 提及的路径优先级更高，已保证单人）。
+                batch = AiOutputValidator.capResponders(batch, maxResponders);
             }
             Set<String> enabledIds = AiOutputValidator.idsOf(npcPool);
             AiBatch validated = AiOutputValidator.validate(batch, enabledIds);
@@ -293,6 +306,37 @@ public final class AiTurnOrchestrator {
                 java.util.Collections.singletonList(event), false);
         chatRepository.insertAiBatch(scriptId, fallback, System.currentTimeMillis());
         callback.onBatchCommitted(requestId, fallback);
+    }
+
+    /** 最近 N 条 AI 角色发言的去重发言者名单（按发言先后，供提示词抑制频繁发言）。 */
+    private static List<String> collectRecentSpeakerNames(List<ChatMessage> allMessages, int window) {
+        List<String> names = new ArrayList<>();
+        if (allMessages == null) {
+            return names;
+        }
+        // 只保留窗口内的 AI 角色发言，按时间正序去重。
+        List<ChatMessage> windowMessages = new ArrayList<>();
+        for (ChatMessage message : allMessages) {
+            if (isAiCharacterTurn(message)) {
+                windowMessages.add(message);
+                if (windowMessages.size() > window) {
+                    windowMessages.remove(0);
+                }
+            }
+        }
+        for (ChatMessage message : windowMessages) {
+            String name = message.getSenderDisplayName();
+            if (name != null && !name.isEmpty() && !names.contains(name)) {
+                names.add(name);
+            }
+        }
+        return names;
+    }
+
+    private static boolean isAiCharacterTurn(ChatMessage message) {
+        return message.getSide() == ChatMessage.Side.THEIRS
+                && message.getType() == ChatMessage.Type.CHARACTER_TEXT
+                && message.getCharacterId() != null;
     }
 
     @Nullable

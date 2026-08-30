@@ -3,6 +3,7 @@ package com.example.roleplaychat.ui.script;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -10,6 +11,7 @@ import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.example.roleplaychat.R;
 import com.example.roleplaychat.domain.model.Script;
 
@@ -44,7 +46,8 @@ public class ScriptListAdapter extends ListAdapter<Script, ScriptListAdapter.Scr
         @Override
         public boolean areContentsTheSame(@NonNull Script oldItem, @NonNull Script newItem) {
             return oldItem.getName().equals(newItem.getName())
-                    && oldItem.getUpdatedAt() == newItem.getUpdatedAt();
+                    && oldItem.getUpdatedAt() == newItem.getUpdatedAt()
+                    && java.util.Objects.equals(oldItem.getCoverRef(), newItem.getCoverRef());
         }
     };
 
@@ -65,6 +68,7 @@ public class ScriptListAdapter extends ListAdapter<Script, ScriptListAdapter.Scr
                 : script.getOneLine());
         holder.time.setText(new SimpleDateFormat("MM-dd HH:mm", Locale.getDefault())
                 .format(new Date(script.getUpdatedAt())));
+        renderCover(holder, script);
         holder.itemView.setOnClickListener(v -> listener.onScriptClick(script));
         holder.itemView.setOnLongClickListener(v -> {
             listener.onScriptLongClick(script);
@@ -72,16 +76,40 @@ public class ScriptListAdapter extends ListAdapter<Script, ScriptListAdapter.Scr
         });
     }
 
+    private void renderCover(@NonNull ScriptViewHolder holder, Script script) {
+        String coverRef = script.getCoverRef();
+        if (coverRef == null || coverRef.isEmpty()) {
+            holder.cover.setVisibility(View.GONE);
+            holder.cover.setImageDrawable(null);
+            return;
+        }
+        java.io.File file = ((com.example.roleplaychat.RolePlayChatApp)
+                holder.itemView.getContext().getApplicationContext())
+                .container().assetStore.resolve(coverRef);
+        if (file == null) {
+            holder.cover.setVisibility(View.GONE);
+            holder.cover.setImageDrawable(null);
+            return;
+        }
+        holder.cover.setVisibility(View.VISIBLE);
+        Glide.with(holder.itemView.getContext())
+                .load(file)
+                .centerCrop()
+                .into(holder.cover);
+    }
+
     static class ScriptViewHolder extends RecyclerView.ViewHolder {
         final TextView name;
         final TextView oneLine;
         final TextView time;
+        final ImageView cover;
 
         ScriptViewHolder(@NonNull View itemView) {
             super(itemView);
             name = itemView.findViewById(R.id.tv_script_name);
             oneLine = itemView.findViewById(R.id.tv_script_one_line);
             time = itemView.findViewById(R.id.tv_script_time);
+            cover = itemView.findViewById(R.id.iv_script_cover);
         }
     }
 }

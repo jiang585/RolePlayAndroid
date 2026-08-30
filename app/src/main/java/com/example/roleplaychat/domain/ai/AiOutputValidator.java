@@ -47,6 +47,40 @@ public final class AiOutputValidator {
                 batch.shouldContinueScene());
     }
 
+    /**
+     * 后置硬约束：不 @ 时按事件原顺序保留前 {@code maxResponders} 个不同
+     * character_id 的 character_turn 事件，超出名额角色的 character_turn 丢弃；
+     * 非角色事件（旁白/场景类）保留。若有事件被丢弃 → continue_scene 置 false
+     * （避免续演引用已被裁掉的内容）。
+     */
+    public static AiBatch capResponders(AiBatch batch, int maxResponders) {
+        if (maxResponders <= 0) {
+            return batch;
+        }
+        List<AiEvent> kept = new ArrayList<>();
+        Set<String> keptCharacterIds = new HashSet<>();
+        boolean droppedAny = false;
+        for (AiEvent event : batch.getEvents()) {
+            if (event.getType() == AiEvent.Type.CHARACTER_TURN) {
+                String characterId = event.getCharacterId();
+                if (characterId != null && keptCharacterIds.contains(characterId)) {
+                    droppedAny = true;
+                    continue; // 同一角色多条发言：只保留第一条
+                }
+                if (characterId != null && keptCharacterIds.size() >= maxResponders) {
+                    droppedAny = true;
+                    continue; // 超出本轮名额：丢弃
+                }
+                if (characterId != null) {
+                    keptCharacterIds.add(characterId);
+                }
+            }
+            kept.add(event);
+        }
+        boolean continueScene = batch.shouldContinueScene() && !droppedAny;
+        return new AiBatch(batch.getRequestId(), batch.getScriptId(), kept, continueScene);
+    }
+
     /** 兼容模型把 character_id 填成角色姓名/别名的情况，统一转换为本地 ID。 */
     public static AiBatch normalizeCharacterReferences(AiBatch batch,
             List<com.example.roleplaychat.domain.model.CharacterProfile> characters) {

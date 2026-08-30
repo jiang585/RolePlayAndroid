@@ -31,6 +31,12 @@ public final class PromptAssembler {
         StringBuilder sb = new StringBuilder();
         sb.append(PRODUCT_PROTOCOL).append('\n');
 
+        // 1. 用户扮演要求（剧本级，长期生效；显式指令位置靠前权重高）
+        if (ctx.getStyleDirective() != null && !ctx.getStyleDirective().isEmpty()) {
+            sb.append("\n【用户扮演要求（每次回复都必须遵守，优先级高于其他任何演出偏好）】\n")
+                    .append(ctx.getStyleDirective()).append('\n');
+        }
+
         // 2. 世界观摘要
         if (ctx.getWorld() != null) {
             WorldSetting w = ctx.getWorld();
@@ -64,8 +70,19 @@ public final class PromptAssembler {
                 if (npc.getPersonality() != null && !npc.getPersonality().isEmpty()) {
                     sb.append("  性格：").append(npc.getPersonality()).append('\n');
                 }
+                if (npc.getBackstory() != null && !npc.getBackstory().isEmpty()) {
+                    sb.append("  背景故事：").append(truncate(npc.getBackstory(), 300)).append('\n');
+                }
                 if (npc.getSpeakingStyle() != null && !npc.getSpeakingStyle().isEmpty()) {
                     sb.append("  说话风格：").append(npc.getSpeakingStyle()).append('\n');
+                }
+                if (npc.getSampleLines() != null && !npc.getSampleLines().isEmpty()) {
+                    sb.append("  示例台词：").append(String.join(" / ", npc.getSampleLines()))
+                            .append('\n');
+                }
+                if (npc.getSystemPrompt() != null && !npc.getSystemPrompt().isEmpty()) {
+                    sb.append("  角色指令（塑造该角色时必须遵循）：").append(npc.getSystemPrompt())
+                            .append('\n');
                 }
                 if (npc.getRelationships() != null && !npc.getRelationships().isEmpty()) {
                     sb.append("  关系：");
@@ -81,6 +98,16 @@ public final class PromptAssembler {
                     sb.append("  隐藏设定（不要主动暴露）：").append(npc.getHiddenSetting()).append('\n');
                 }
             }
+        }
+
+        // 回复节奏约束：限制每轮发言人数，抑制"全员轮流表态"。
+        sb.append("\n【回复节奏约束】\n");
+        sb.append("- 本轮最多 ").append(Math.max(1, ctx.getMaxResponders()))
+                .append(" 名角色回复。只让真正有动机、有信息量的角色开口。\n");
+        sb.append("- 没有理由开口的角色必须保持沉默，绝不允许在场角色轮流表态。\n");
+        if (ctx.getRecentSpeakerNames() != null && !ctx.getRecentSpeakerNames().isEmpty()) {
+            sb.append("- 以下角色最近刚刚发言，除非有强烈的新动机，本轮让他们沉默：")
+                    .append(String.join("、", ctx.getRecentSpeakerNames())).append("。\n");
         }
 
         // 4. 玩家身份
@@ -127,6 +154,11 @@ public final class PromptAssembler {
                 .append("只有仍有明确的 NPC 接续动作时才设为 true。\n");
 
         return sb.toString();
+    }
+
+    /** 超长背景按字符截断（控制上下文预算）。 */
+    private static String truncate(String value, int maxChars) {
+        return value.length() <= maxChars ? value : value.substring(0, maxChars);
     }
 
     /** 组装 messages 列表（system + 历史对话摘要 + 最近对话）。 */

@@ -32,6 +32,12 @@ android {
             )
         }
     }
+    sourceSets {
+        // Room 导出的 schema 供 androidTest 的 MigrationTestHelper 读取（迁移测试）
+        getByName("androidTest") {
+            assets.srcDir("$projectDir/schemas")
+        }
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11

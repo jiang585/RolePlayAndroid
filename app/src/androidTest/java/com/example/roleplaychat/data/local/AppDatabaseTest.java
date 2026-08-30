@@ -141,7 +141,7 @@ public class AppDatabaseTest {
     }
 
     @Test
-    public void deleteCurrentCharacter_disablesItAndFallsBackToObserver() {
+    public void deleteCharacter_hardDeletesRowCleansMembersAndPreservesMessages() {
         long now = System.currentTimeMillis();
         String scriptId = "script-delete-character";
         db.scriptDao().insert(new ScriptEntity(scriptId, "Delete", null, null, now, now, 0));
@@ -150,12 +150,43 @@ public class AppDatabaseTest {
                 SessionMemberEntity.MEMBER_PLAYER, PlayerIdentity.RoleType.OBSERVER.name(), false, now);
         db.sessionMemberDao().upsertMember("player", scriptId, "char-player",
                 SessionMemberEntity.MEMBER_PLAYER, PlayerIdentity.RoleType.PROTAGONIST.name(), true, now);
+        // 该角色的历史消息（快照字段齐全）
+        MessageEntity message = createMessage("msg-1", scriptId, 1, now);
+        message.character_id = "char-player";
+        message.sender_name_snapshot = "张三";
+        db.messageDao().insert(message);
 
         new CharacterRepositoryImpl(db).deleteCharacter("char-player");
 
-        assertNotNull(db.characterDao().getById("char-player"));
-        assertEquals(false, db.characterDao().getById("char-player").enabled);
-        assertNull(db.sessionMemberDao().getActivePlayer(scriptId).character_id);
+        // 行被硬删除
+        assertNull(db.characterDao().getById("char-player"));
+        // 成员行被清理，身份回退观察者（member_type=PLAYER、character_id 为空）
+        assertNull(db.sessionMemberDao().getMemberByCharacter(scriptId, "char-player"));
+        SessionMemberEntity activePlayer = db.sessionMemberDao().getActivePlayer(scriptId);
+        assertNotNull(activePlayer);
+        assertNull(activePlayer.character_id);
+        // 关联消息保留，character_id 被外键置空，快照字段完好
+        List<MessageEntity> messages = db.messageDao().loadAll(scriptId);
+        assertEquals(1, messages.size());
+        assertNull(messages.get(0).character_id);
+        assertEquals("张三", messages.get(0).sender_name_snapshot);
+    }
+
+    @Test
+    public void disableCharacter_keepsRowAndDeactivatesMembership() {
+        long now = System.currentTimeMillis();
+        String scriptId = "script-disable-character";
+        db.scriptDao().insert(new ScriptEntity(scriptId, "Disable", null, null, now, now, 0));
+        db.characterDao().insert(createCharacter("char-npc", scriptId, now));
+        db.sessionMemberDao().upsertMember("member-npc", scriptId, "char-npc",
+                SessionMemberEntity.MEMBER_NPC, null, true, now);
+
+        new CharacterRepositoryImpl(db).disableCharacter("char-npc");
+
+        // 软停用：角色卡保留
+        assertNotNull(db.characterDao().getById("char-npc"));
+        assertEquals(false, db.characterDao().getById("char-npc").enabled);
+        assertEquals(false, db.sessionMemberDao().getMemberByCharacter(scriptId, "char-npc").active);
     }
 
     @Test

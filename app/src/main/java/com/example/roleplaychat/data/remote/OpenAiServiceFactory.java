@@ -66,7 +66,7 @@ public final class OpenAiServiceFactory {
     }
 
     /** 确保 BaseURL 以 / 结尾，兼容用户省略路径。 */
-    private static String normalizeBaseUrl(String baseUrl) {
+    public static String normalizeBaseUrl(String baseUrl) {
         String url = baseUrl == null || baseUrl.isEmpty() ? "https://api.openai.com/v1/" : baseUrl;
         if (!url.endsWith("/")) {
             url = url + "/";

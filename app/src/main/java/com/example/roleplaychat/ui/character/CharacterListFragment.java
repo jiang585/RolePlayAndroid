@@ -25,7 +25,8 @@ import java.util.List;
 /**
  * 角色管理页（S5 列表部分）。
  */
-public class CharacterListFragment extends Fragment implements CharacterListAdapter.Listener {
+public class CharacterListFragment extends Fragment
+        implements CharacterListAdapter.Listener, CharacterListAdapter.OnCharacterLongClickListener {
 
     private String scriptId;
     private CharacterListAdapter adapter;
@@ -45,7 +46,7 @@ public class CharacterListFragment extends Fragment implements CharacterListAdap
         }
         RecyclerView recyclerView = view.findViewById(R.id.recycler_characters);
         recyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        adapter = new CharacterListAdapter(this);
+        adapter = new CharacterListAdapter(this, this);
         recyclerView.setAdapter(adapter);
 
         FloatingActionButton fab = view.findViewById(R.id.fab_add_character);
@@ -63,6 +64,64 @@ public class CharacterListFragment extends Fragment implements CharacterListAdap
     @Override
     public void onCharacterClick(CharacterProfile character) {
         navigateToEdit(character.getId());
+    }
+
+    @Override
+    public void onCharacterLongClick(CharacterProfile character) {
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                .setTitle(character.getName())
+                .setItems(new CharSequence[]{
+                        getString(R.string.character_delete_menu),
+                        getString(R.string.character_disable_menu)
+                }, (dialog, which) -> {
+                    if (which == 0) {
+                        confirmDelete(character);
+                    } else {
+                        disableCharacter(character);
+                    }
+                })
+                .setNegativeButton(R.string.action_cancel, null)
+                .show();
+    }
+
+    private void confirmDelete(CharacterProfile character) {
+        new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.character_delete_menu)
+                .setMessage(getString(R.string.character_delete_confirm, character.getName()))
+                .setPositiveButton(R.string.action_delete, (dialog, which) ->
+                        deleteCharacter(character))
+                .setNegativeButton(R.string.action_cancel, null)
+                .show();
+    }
+
+    private void deleteCharacter(CharacterProfile character) {
+        com.example.roleplaychat.domain.repository.CharacterRepository repository =
+                ((RolePlayChatApp) requireActivity().getApplication()).container().characterRepository;
+        ((RolePlayChatApp) requireActivity().getApplication()).container().executors
+                .diskIO().execute(() -> {
+                    repository.deleteCharacter(character.getId());
+                    toastOnMain(R.string.character_deleted);
+                });
+    }
+
+    private void disableCharacter(CharacterProfile character) {
+        com.example.roleplaychat.domain.repository.CharacterRepository repository =
+                ((RolePlayChatApp) requireActivity().getApplication()).container().characterRepository;
+        ((RolePlayChatApp) requireActivity().getApplication()).container().executors
+                .diskIO().execute(() -> {
+                    repository.disableCharacter(character.getId());
+                    toastOnMain(R.string.character_disabled);
+                });
+    }
+
+    private void toastOnMain(int resId) {
+        ((RolePlayChatApp) requireActivity().getApplication()).container().executors
+                .mainThread().execute(() -> {
+                    if (isAdded() && getContext() != null) {
+                        android.widget.Toast.makeText(getContext(), resId,
+                                android.widget.Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     private void navigateToEdit(@Nullable String characterId) {
