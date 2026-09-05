@@ -14,3 +14,8 @@
 .cxx
 local.properties
 *.log
+
+# 本地调试与私人测试数据，不公开
+/debug_*
+dedup_test_run.log
+/docs_s9_chat_screenshot.png

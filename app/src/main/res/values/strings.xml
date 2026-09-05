@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">角色扮演群聊</string>
+    <string name="app_name">满座</string>
 
     <!-- 通用 -->
     <string name="action_save">保存</string>
@@ -202,7 +202,7 @@
     <string name="settings_context_window">上下文策略</string>
     <string name="settings_context_recent">最近消息条数</string>
     <string name="settings_about">关于</string>
-    <string name="settings_about_text">RolePlayChat v1.0\n多人角色扮演群聊</string>
+    <string name="settings_about_text">满座 FullHouse v1.0\n多人 AI 角色扮演群聊</string>
     <string name="settings_profiles">配置档案</string>
     <string name="settings_profile_add">＋ 新增配置</string>
     <string name="settings_profile_name_hint">配置名称（如：DeepSeek 主力）</string>
