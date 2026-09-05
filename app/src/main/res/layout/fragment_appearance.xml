@@ -3,142 +3,210 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/bg_page_warm"
     android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="@dimen/screen_margin">
+        android:padding="@dimen/screen_margin"
+        android:paddingBottom="48dp">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/appearance_background"
-            android:textSize="@dimen/text_title"
+            android:text="@string/appearance_title"
+            android:textSize="22sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_m"
-            android:orientation="horizontal">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_pick_background"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/appearance_background_image"
-                style="@style/Widget.RolePlayChat.Button" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_reset_background"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="@dimen/space_s"
-                android:text="@string/appearance_background_none"
-                style="@style/Widget.Material3.Button.OutlinedButton" />
-        </LinearLayout>
-
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_l"
-            android:text="@string/appearance_background_dim"
-            android:textColor="@color/text_secondary"
-            android:textSize="@dimen/text_body" />
+            android:layout_marginTop="4dp"
+            android:text="自定义当前剧本的对话背景、气泡形制与文字色调"
+            android:textSize="13sp"
+            android:textColor="@color/text_secondary" />
 
-        <SeekBar
-            android:id="@+id/seek_background_dim"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:max="100" />
-
-        <TextView
+        <!-- 卡片1：聊天背景 -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/space_l"
-            android:text="@string/appearance_bubble_style"
-            android:textSize="@dimen/text_title"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary" />
+            style="@style/Widget.RolePlayChat.Card">
 
-        <com.google.android.material.chip.ChipGroup
-            android:id="@+id/chip_group_bubble_style"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_s"
-            app:singleSelection="true">
-
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chip_style_rounded"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:tag="rounded_v1"
-                android:text="圆角" />
+                android:orientation="vertical"
+                android:padding="@dimen/space_l">
 
-            <com.google.android.material.chip.Chip
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:tag="rounded_tail_v1"
-                android:text="圆角带尾" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/appearance_background"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary" />
 
-            <com.google.android.material.chip.Chip
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:tag="sharp_v1"
-                android:text="直角" />
-        </com.google.android.material.chip.ChipGroup>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_m"
+                    android:orientation="horizontal">
 
-        <TextView
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_pick_background"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/appearance_background_image"
+                        style="@style/Widget.RolePlayChat.Button.Secondary"
+                        app:icon="@drawable/ic_palette" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_reset_background"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="@dimen/space_s"
+                        android:text="@string/appearance_background_none"
+                        style="@style/Widget.RolePlayChat.Button.Quiet" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_l"
+                    android:text="@string/appearance_background_dim"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/text_body" />
+
+                <SeekBar
+                    android:id="@+id/seek_background_dim"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_s"
+                    android:max="100" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 卡片2：气泡样式 -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/space_l"
-            android:text="@string/appearance_bubble_color"
-            android:textSize="@dimen/text_title"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary" />
+            style="@style/Widget.RolePlayChat.Card">
 
-        <LinearLayout
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/space_l">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/appearance_bubble_style"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary" />
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chip_group_bubble_style"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_m"
+                    app:singleSelection="true">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_style_rounded"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:tag="rounded_v1"
+                        android:text="圆角" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_style_rounded_tail"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:tag="rounded_tail_v1"
+                        android:text="圆角带尾" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip_style_sharp"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:tag="sharp_v1"
+                        android:text="直角" />
+                </com.google.android.material.chip.ChipGroup>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 卡片3：气泡配色 -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_m"
-            android:orientation="horizontal">
+            android:layout_marginTop="@dimen/space_l"
+            style="@style/Widget.RolePlayChat.Card">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_bubble_color"
-                android:layout_width="0dp"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/appearance_bubble_color"
-                style="@style/Widget.RolePlayChat.Button" />
+                android:orientation="vertical"
+                android:padding="@dimen/space_l">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_text_color"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="@dimen/space_s"
-                android:text="@string/appearance_text_color"
-                style="@style/Widget.RolePlayChat.Button" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/appearance_bubble_color"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_nickname_color"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="@dimen/space_s"
-                android:text="@string/appearance_nickname_color"
-                style="@style/Widget.RolePlayChat.Button" />
-        </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_m"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_bubble_color"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/appearance_bubble_color"
+                        style="@style/Widget.RolePlayChat.Button.Quiet" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_text_color"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="@dimen/space_s"
+                        android:text="@string/appearance_text_color"
+                        style="@style/Widget.RolePlayChat.Button.Quiet" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_nickname_color"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="@dimen/space_s"
+                        android:text="@string/appearance_nickname_color"
+                        style="@style/Widget.RolePlayChat.Button.Quiet" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_save_appearance"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="50dp"
             android:layout_marginTop="@dimen/space_xl"
             android:text="@string/action_save"
             style="@style/Widget.RolePlayChat.Button" />

@@ -23,7 +23,9 @@
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/space_l"
         android:contentDescription="@string/character_create"
-        android:backgroundTint="@color/brand_primary"
+        app:backgroundTint="@color/brand_primary"
+        app:tint="@color/white"
+        app:elevation="4dp"
         android:src="@android:drawable/ic_input_add"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

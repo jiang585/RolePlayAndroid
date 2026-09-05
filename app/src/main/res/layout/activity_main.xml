@@ -13,9 +13,15 @@
         android:layout_height="?attr/actionBarSize"
         android:background="@color/s9_top_bar"
         android:elevation="0dp"
+        app:titleTextAppearance="@style/TextAppearance.Material3.TitleMedium"
         app:titleTextColor="@color/s9_group_name"
         app:subtitleTextColor="@color/s9_identity_subtitle"
         app:navigationIconTint="@color/s9_identity_subtitle" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/s9_divider" />
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/nav_host_fragment"

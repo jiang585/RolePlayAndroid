@@ -4,9 +4,9 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="start"
-    android:paddingVertical="@dimen/space_xs"
+    android:paddingVertical="5dp"
     android:paddingStart="@dimen/space_xs"
-    android:paddingEnd="72dp">
+    android:paddingEnd="48dp">
 
     <ImageView
         android:id="@+id/iv_avatar"
@@ -21,14 +21,15 @@
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/space_s"
+        android:layout_marginStart="10dp"
         android:orientation="vertical">
 
         <TextView
             android:id="@+id/tv_nickname"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/space_s"
+            android:layout_marginStart="4dp"
+            android:layout_marginBottom="3dp"
             android:textColor="@color/s9_npc_name"
             android:textSize="@dimen/s9_npc_name_size"
             android:textStyle="bold" />
@@ -37,11 +38,11 @@
             android:id="@+id/tv_message_content"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_xs"
             android:background="@drawable/bg_bubble_theirs"
             android:maxWidth="@dimen/chat_bubble_max_width"
-            android:paddingHorizontal="@dimen/space_m"
-            android:paddingVertical="@dimen/space_s"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="10dp"
+            android:lineSpacingExtra="3dp"
             android:textColor="@color/s9_npc_text"
             android:textSize="@dimen/s9_message_size" />
     </LinearLayout>

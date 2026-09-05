@@ -3,7 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:foregroundGravity="center_horizontal"
-    android:paddingVertical="@dimen/space_s">
+    android:paddingVertical="@dimen/space_s"
+    android:paddingHorizontal="@dimen/space_m">
 
     <TextView
         android:id="@+id/tv_event_content"
@@ -12,9 +13,10 @@
         android:layout_gravity="center_horizontal"
         android:background="@drawable/bg_system_event"
         android:gravity="center"
-        android:maxWidth="320dp"
-        android:paddingHorizontal="@dimen/space_m"
-        android:paddingVertical="@dimen/space_xs"
+        android:maxWidth="340dp"
+        android:paddingHorizontal="14dp"
+        android:paddingVertical="5dp"
+        android:lineSpacingExtra="2dp"
         android:textColor="@color/s9_event_text"
         android:textSize="@dimen/s9_event_size" />
 </FrameLayout>

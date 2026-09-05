@@ -6,13 +6,14 @@
     android:orientation="vertical"
     android:background="@color/s9_page_background">
 
-    <!-- 生成状态条：仅作低干扰状态提示，剧情由 AI 自动决定是否继续 -->
+    <!-- 生成状态条：低干扰优雅状态胶囊 -->
     <LinearLayout
         android:id="@+id/generation_status"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="@dimen/space_m"
+        android:layout_marginHorizontal="@dimen/screen_margin"
         android:layout_marginTop="@dimen/space_s"
+        android:layout_marginBottom="2dp"
         android:background="@drawable/bg_system_event"
         android:gravity="center_vertical"
         android:orientation="horizontal"
@@ -28,23 +29,23 @@
 
             <View
                 android:id="@+id/dot_1"
-                android:layout_width="8dp"
-                android:layout_height="8dp"
+                android:layout_width="7dp"
+                android:layout_height="7dp"
                 android:background="@drawable/bg_status_dot"
                 android:alpha="1.0" />
 
             <View
                 android:id="@+id/dot_2"
-                android:layout_width="8dp"
-                android:layout_height="8dp"
+                android:layout_width="7dp"
+                android:layout_height="7dp"
                 android:layout_marginStart="@dimen/space_xs"
                 android:background="@drawable/bg_status_dot"
                 android:alpha="0.6" />
 
             <View
                 android:id="@+id/dot_3"
-                android:layout_width="8dp"
-                android:layout_height="8dp"
+                android:layout_width="7dp"
+                android:layout_height="7dp"
                 android:layout_marginStart="@dimen/space_xs"
                 android:background="@drawable/bg_status_dot"
                 android:alpha="0.3" />
@@ -64,11 +65,12 @@
             android:id="@+id/btn_stop_generation"
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="36dp"
             android:minWidth="0dp"
+            android:paddingHorizontal="@dimen/space_s"
             android:text="@string/chat_stop_generating"
-            android:textColor="@color/s9_stop" />
-
+            android:textColor="@color/s9_stop"
+            android:textSize="12sp" />
     </LinearLayout>
 
     <!-- 消息区：背景图 -> 覆盖层 -> 列表 -->
@@ -90,7 +92,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:paddingHorizontal="@dimen/space_m"
+            android:paddingHorizontal="@dimen/space_s"
             android:paddingVertical="@dimen/space_m" />
 
         <TextView
@@ -100,15 +102,23 @@
             android:layout_gravity="bottom|center_horizontal"
             android:layout_marginBottom="@dimen/space_l"
             android:background="@drawable/bg_new_messages"
+            android:elevation="4dp"
             android:paddingHorizontal="@dimen/space_l"
             android:paddingVertical="@dimen/space_s"
             android:text="@string/chat_new_messages"
             android:textColor="@color/white"
             android:textSize="@dimen/text_caption"
+            android:textStyle="bold"
             android:visibility="gone" />
     </FrameLayout>
 
-    <!-- 底部输入栏：动作 + 圆角输入框 + 发送；发送后自动推进剧情 -->
+    <!-- 底部输入区分割线 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/s9_divider" />
+
+    <!-- 底部输入栏：动作 + 圆角输入框 + 发送 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -122,13 +132,13 @@
             android:id="@+id/btn_narration"
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="44dp"
             android:gravity="center"
             android:minWidth="0dp"
-            android:paddingHorizontal="@dimen/space_s"
+            android:paddingHorizontal="10dp"
             android:text="@string/chat_action_narration"
             android:textColor="@color/s9_action_text"
-            android:textSize="@dimen/s9_input_hint_size"
+            android:textSize="13sp"
             app:icon="@drawable/ic_edit_note"
             app:iconGravity="textStart"
             app:iconSize="18dp"
@@ -138,17 +148,18 @@
             android:id="@+id/input_message"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="@dimen/space_s"
+            android:layout_marginHorizontal="@dimen/space_xs"
             android:layout_weight="1"
             android:background="@drawable/bg_input_field"
             android:hint="@string/chat_input_hint"
             android:textColorHint="@color/s9_input_hint"
             android:importantForAutofill="no"
             android:inputType="textMultiLine"
-            android:maxLines="3"
+            android:maxLines="4"
             android:minHeight="@dimen/s9_input_min_height"
-            android:paddingHorizontal="@dimen/space_l"
-            android:paddingVertical="@dimen/space_s"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="9dp"
+            android:lineSpacingExtra="2dp"
             android:textColor="@color/s9_npc_text"
             android:textSize="@dimen/s9_input_hint_size" />
 

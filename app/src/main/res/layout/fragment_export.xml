@@ -3,74 +3,138 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/bg_page_warm"
     android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="@dimen/screen_margin">
+        android:padding="@dimen/screen_margin"
+        android:paddingBottom="48dp">
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/import_export_title"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="导出剧本完整数据包、角色卡或聊天记录，或导入酒馆角色"
+            android:textSize="13sp"
+            android:textColor="@color/text_secondary" />
+
+        <!-- 保持 TextView 以防兼容性检测 -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/import_export_export"
-            android:textSize="@dimen/text_title"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary"
             android:visibility="gone" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_export_character"
+        <!-- 卡片1：数据导出 -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/import_export_character"
-            style="@style/Widget.RolePlayChat.Button"
-            app:icon="@android:drawable/ic_menu_share" />
+            android:layout_marginTop="@dimen/space_l"
+            style="@style/Widget.RolePlayChat.Card">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_export_world"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_m"
-            android:text="@string/import_export_world"
-            style="@style/Widget.RolePlayChat.Button"
-            app:icon="@android:drawable/ic_menu_share" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/space_l">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_export_chat"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_m"
-            android:text="@string/import_export_chat"
-            style="@style/Widget.RolePlayChat.Button"
-            app:icon="@android:drawable/ic_menu_share" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="导出数据资产"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_export_package"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_m"
-            android:text="@string/import_export_script_package"
-            style="@style/Widget.RolePlayChat.Button"
-            app:icon="@android:drawable/ic_menu_share" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_export_package"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="@dimen/space_m"
+                    android:text="@string/import_export_script_package"
+                    style="@style/Widget.RolePlayChat.Button"
+                    app:icon="@android:drawable/ic_menu_share"
+                    app:iconGravity="textStart"
+                    app:iconPadding="8dp" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_xl"
-            android:text="@string/import_export_import"
-            android:textSize="@dimen/text_title"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_export_world"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="@dimen/space_s"
+                    android:text="@string/import_export_world"
+                    style="@style/Widget.RolePlayChat.Button.Secondary"
+                    app:icon="@android:drawable/ic_menu_share"
+                    app:iconGravity="textStart"
+                    app:iconPadding="8dp" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_import_character"
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_export_character"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="@dimen/space_s"
+                    android:text="@string/import_export_character"
+                    style="@style/Widget.RolePlayChat.Button.Secondary"
+                    app:icon="@android:drawable/ic_menu_share"
+                    app:iconGravity="textStart"
+                    app:iconPadding="8dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_export_chat"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="@dimen/space_s"
+                    android:text="@string/import_export_chat"
+                    style="@style/Widget.RolePlayChat.Button.Quiet"
+                    app:icon="@android:drawable/ic_menu_share"
+                    app:iconGravity="textStart"
+                    app:iconPadding="8dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 卡片2：角色导入 -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_m"
-            android:text="@string/import_export_character"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            app:icon="@android:drawable/ic_menu_add" />
+            android:layout_marginTop="@dimen/space_l"
+            style="@style/Widget.RolePlayChat.Card">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/space_l">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/import_export_import"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_import_character"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="@dimen/space_m"
+                    android:text="@string/import_export_character"
+                    style="@style/Widget.RolePlayChat.Button.Quiet"
+                    app:icon="@android:drawable/ic_menu_add"
+                    app:iconGravity="textStart"
+                    app:iconPadding="8dp" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
 </ScrollView>

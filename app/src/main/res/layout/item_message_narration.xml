@@ -4,7 +4,8 @@
     android:layout_height="wrap_content"
     android:foregroundGravity="center_horizontal"
     android:paddingTop="@dimen/space_m"
-    android:paddingBottom="@dimen/space_m">
+    android:paddingBottom="@dimen/space_m"
+    android:paddingHorizontal="@dimen/space_m">
 
     <TextView
         android:id="@+id/tv_narration_content"
@@ -13,9 +14,10 @@
         android:layout_gravity="center_horizontal"
         android:background="@drawable/bg_narration_chip"
         android:gravity="center"
-        android:maxWidth="320dp"
-        android:paddingHorizontal="@dimen/space_m"
-        android:paddingVertical="@dimen/space_s"
+        android:maxWidth="340dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="10dp"
+        android:lineSpacingExtra="3dp"
         android:textColor="@color/s9_narration_text"
         android:textSize="@dimen/s9_narration_size" />
 </FrameLayout>

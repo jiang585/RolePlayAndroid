@@ -1,16 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/bg_page_warm"
     android:orientation="vertical"
-    android:padding="@dimen/screen_margin">
+    android:padding="@dimen/screen_margin"
+    android:paddingBottom="32dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/character_import_title"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="支持导入酒馆 Tavern / V2 角色卡规范 JSON 或卡图文件"
+        android:textSize="13sp"
+        android:textColor="@color/text_secondary" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_pick_card_file"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
+        android:layout_marginTop="@dimen/space_l"
         android:text="@string/character_import_from_file"
-        style="@style/Widget.RolePlayChat.Button" />
+        style="@style/Widget.RolePlayChat.Button.Secondary"
+        app:icon="@android:drawable/ic_menu_upload"
+        app:iconGravity="textStart"
+        app:iconPadding="8dp" />
 
     <TextView
         android:id="@+id/tv_import_preview"
@@ -20,13 +43,14 @@
         android:layout_marginTop="@dimen/space_l"
         android:background="@drawable/bg_preview_box"
         android:padding="@dimen/space_l"
+        android:lineSpacingExtra="3dp"
         android:textColor="@color/text_primary"
         android:textSize="@dimen/text_body" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_confirm_import"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="50dp"
         android:layout_marginTop="@dimen/space_l"
         android:text="@string/character_import_confirm"
         style="@style/Widget.RolePlayChat.Button" />

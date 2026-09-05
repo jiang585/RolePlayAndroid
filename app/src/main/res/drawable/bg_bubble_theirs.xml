@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- NPC 消息气泡：左上4(尾) 右上16 左下16 右下16，尾朝左，带浅边框 -->
+<!-- NPC 消息气泡：左上4(尾) 右上16 左下16 右下16，尾朝左，带浅边框与纸感底色 -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
     <solid android:color="@color/s9_npc_bubble" />

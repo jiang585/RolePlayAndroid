@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg_page_warm"
@@ -10,134 +11,234 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="@dimen/screen_margin"
-        android:paddingBottom="32dp">
+        android:paddingBottom="48dp">
 
+        <!-- 顶部标题 -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/settings_api"
-            android:textSize="@dimen/text_title"
+            android:textSize="22sp"
             android:textStyle="bold"
             android:textColor="@color/text_primary" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_m"
-            android:text="@string/settings_profiles"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary" />
+            android:layout_marginTop="4dp"
+            android:text="配置大模型提供商密钥与参数档案"
+            android:textSize="13sp"
+            android:textColor="@color/text_secondary" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recycler_profiles"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:overScrollMode="never"
-            android:nestedScrollingEnabled="false" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_add_profile"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="@string/settings_profile_add"
-            style="@style/Widget.RolePlayChat.Button.Quiet" />
-
+        <!-- 卡片1：配置档案列表 -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_m"
+            android:layout_marginTop="@dimen/space_l"
             style="@style/Widget.RolePlayChat.Card">
 
-            <Spinner
-                android:id="@+id/input_provider"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
-                android:contentDescription="@string/settings_provider"
-                android:paddingHorizontal="@dimen/space_m" />
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/space_l">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_profiles"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recycler_profiles"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_s"
+                    android:overScrollMode="never"
+                    android:nestedScrollingEnabled="false" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_add_profile"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_m"
+                    android:text="@string/settings_profile_add"
+                    style="@style/Widget.RolePlayChat.Button.Quiet"
+                    app:icon="@android:drawable/ic_input_add" />
+            </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <EditText
-            android:id="@+id/input_profile_name"
+        <!-- 卡片2：接口参数详情编辑 -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_m"
-            android:hint="@string/settings_profile_name_hint"
-            android:inputType="text"
-            android:maxLength="40"
-            android:textSize="@dimen/text_body"
-            android:backgroundTint="@color/brand_outline" />
+            android:layout_marginTop="@dimen/space_l"
+            style="@style/Widget.RolePlayChat.Card">
 
-        <EditText
-            android:id="@+id/input_base_url"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_m"
-            android:hint="@string/settings_base_url_hint"
-            android:inputType="textUri"
-            android:textSize="@dimen/text_body"
-            android:backgroundTint="@color/brand_outline" />
-
-        <EditText
-            android:id="@+id/input_api_key"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_m"
-            android:hint="@string/settings_api_key_hint"
-            android:inputType="textPassword"
-            android:textSize="@dimen/text_body"
-            android:backgroundTint="@color/brand_outline" />
-
-        <EditText
-            android:id="@+id/input_model"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_m"
-            android:hint="@string/settings_model_hint"
-            android:inputType="text"
-            android:textSize="@dimen/text_body"
-            android:backgroundTint="@color/brand_outline" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_m"
-            android:orientation="horizontal">
-
-            <EditText
-                android:id="@+id/input_temperature"
-                android:layout_width="0dp"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:hint="@string/settings_temperature"
-                android:inputType="numberDecimal"
-                android:textSize="@dimen/text_body"
-                android:backgroundTint="@color/brand_outline" />
+                android:orientation="vertical"
+                android:padding="@dimen/space_l">
 
-            <EditText
-                android:id="@+id/input_top_p"
-                android:layout_width="0dp"
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="模型连接配置"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_m"
+                    android:background="@drawable/bg_input_field">
+
+                    <Spinner
+                        android:id="@+id/input_provider"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:contentDescription="@string/settings_provider"
+                        android:paddingHorizontal="14dp" />
+                </FrameLayout>
+
+                <EditText
+                    android:id="@+id/input_profile_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_m"
+                    android:background="@drawable/bg_input_field"
+                    android:hint="@string/settings_profile_name_hint"
+                    android:textColorHint="@color/text_disabled"
+                    android:textColor="@color/text_primary"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="10dp"
+                    android:inputType="text"
+                    android:maxLength="40"
+                    android:textSize="@dimen/text_body" />
+
+                <EditText
+                    android:id="@+id/input_base_url"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_s"
+                    android:background="@drawable/bg_input_field"
+                    android:hint="@string/settings_base_url_hint"
+                    android:textColorHint="@color/text_disabled"
+                    android:textColor="@color/text_primary"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="10dp"
+                    android:inputType="textUri"
+                    android:textSize="@dimen/text_body" />
+
+                <EditText
+                    android:id="@+id/input_api_key"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_s"
+                    android:background="@drawable/bg_input_field"
+                    android:hint="@string/settings_api_key_hint"
+                    android:textColorHint="@color/text_disabled"
+                    android:textColor="@color/text_primary"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="10dp"
+                    android:inputType="textPassword"
+                    android:textSize="@dimen/text_body" />
+
+                <EditText
+                    android:id="@+id/input_model"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_s"
+                    android:background="@drawable/bg_input_field"
+                    android:hint="@string/settings_model_hint"
+                    android:textColorHint="@color/text_disabled"
+                    android:textColor="@color/text_primary"
+                    android:paddingHorizontal="14dp"
+                    android:paddingVertical="10dp"
+                    android:inputType="text"
+                    android:textSize="@dimen/text_body" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 卡片3：推理超参数 -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_l"
+            style="@style/Widget.RolePlayChat.Card">
+
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="@dimen/space_m"
-                android:hint="@string/settings_top_p"
-                android:inputType="numberDecimal"
-                android:textSize="@dimen/text_body"
-                android:backgroundTint="@color/brand_outline" />
+                android:orientation="vertical"
+                android:padding="@dimen/space_l">
 
-            <EditText
-                android:id="@+id/input_max_tokens"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="@dimen/space_m"
-                android:hint="@string/settings_max_tokens"
-                android:inputType="number"
-                android:textSize="@dimen/text_body"
-                android:backgroundTint="@color/brand_outline" />
-        </LinearLayout>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="生成参数调优"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary" />
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_m"
+                    android:orientation="horizontal">
+
+                    <EditText
+                        android:id="@+id/input_temperature"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_input_field"
+                        android:hint="@string/settings_temperature"
+                        android:textColorHint="@color/text_disabled"
+                        android:textColor="@color/text_primary"
+                        android:paddingHorizontal="12dp"
+                        android:paddingVertical="10dp"
+                        android:inputType="numberDecimal"
+                        android:textSize="@dimen/text_body" />
+
+                    <EditText
+                        android:id="@+id/input_top_p"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="@dimen/space_s"
+                        android:background="@drawable/bg_input_field"
+                        android:hint="@string/settings_top_p"
+                        android:textColorHint="@color/text_disabled"
+                        android:textColor="@color/text_primary"
+                        android:paddingHorizontal="12dp"
+                        android:paddingVertical="10dp"
+                        android:inputType="numberDecimal"
+                        android:textSize="@dimen/text_body" />
+
+                    <EditText
+                        android:id="@+id/input_max_tokens"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="@dimen/space_s"
+                        android:background="@drawable/bg_input_field"
+                        android:hint="@string/settings_max_tokens"
+                        android:textColorHint="@color/text_disabled"
+                        android:textColor="@color/text_primary"
+                        android:paddingHorizontal="12dp"
+                        android:paddingVertical="10dp"
+                        android:inputType="number"
+                        android:textSize="@dimen/text_body" />
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 操作按钮组合 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -147,62 +248,90 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_save_settings"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="48dp"
                 android:layout_weight="1"
                 android:text="@string/settings_save_profile"
-                style="@style/Widget.RolePlayChat.Button" />
+                style="@style/Widget.RolePlayChat.Button.Secondary" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_activate_save"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="48dp"
                 android:layout_weight="1"
                 android:layout_marginStart="@dimen/space_s"
                 android:text="@string/settings_profile_enable_and_save"
                 style="@style/Widget.RolePlayChat.Button" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_test_connection"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="@dimen/space_s"
-                android:text="@string/settings_test_connection"
-                style="@style/Widget.RolePlayChat.Button.Quiet" />
         </LinearLayout>
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/section_gap"
-            android:text="@string/settings_data"
-            android:textSize="@dimen/text_title"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary" />
-
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_clear_chat"
+            android:id="@+id/btn_test_connection"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_m"
-            android:text="@string/settings_clear_chat"
+            android:layout_height="48dp"
+            android:layout_marginTop="@dimen/space_s"
+            android:text="@string/settings_test_connection"
             style="@style/Widget.RolePlayChat.Button.Quiet" />
 
-        <TextView
+        <!-- 卡片4：数据维护 -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/section_gap"
-            android:text="@string/settings_about"
-            android:textSize="@dimen/text_title"
-            android:textStyle="bold"
-            android:textColor="@color/text_primary" />
+            style="@style/Widget.RolePlayChat.Card">
 
-        <TextView
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/space_l">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_data"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_clear_chat"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_m"
+                    android:text="@string/settings_clear_chat"
+                    style="@style/Widget.RolePlayChat.Button.Quiet" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 卡片5：关于 -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_s"
-            android:text="@string/settings_about_text"
-            android:textColor="@color/text_secondary"
-            android:textSize="@dimen/text_body" />
+            android:layout_marginTop="@dimen/space_l"
+            style="@style/Widget.RolePlayChat.Card">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/space_l">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/settings_about"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:lineSpacingExtra="3dp"
+                    android:text="@string/settings_about_text"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/text_body" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
 </ScrollView>

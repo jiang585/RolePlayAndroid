@@ -4,30 +4,36 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="end"
-    android:paddingVertical="@dimen/space_xs"
-    android:paddingStart="72dp"
+    android:paddingVertical="5dp"
+    android:paddingStart="48dp"
     android:paddingEnd="@dimen/space_xs">
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="10dp"
         android:orientation="vertical">
+
         <TextView
             android:id="@+id/tv_nickname"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
+            android:layout_marginEnd="4dp"
+            android:layout_marginBottom="3dp"
             android:textColor="@color/s9_npc_name"
             android:textSize="@dimen/s9_npc_name_size"
             android:textStyle="bold" />
+
         <TextView
             android:id="@+id/tv_message_content"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_bubble_mine"
             android:maxWidth="@dimen/chat_bubble_max_width"
-            android:paddingHorizontal="@dimen/space_m"
-            android:paddingVertical="@dimen/space_s"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="10dp"
+            android:lineSpacingExtra="3dp"
             android:textColor="@color/s9_my_text"
             android:textSize="@dimen/s9_message_size" />
     </LinearLayout>
@@ -36,7 +42,6 @@
         android:id="@+id/iv_avatar"
         android:layout_width="@dimen/s9_avatar_mine"
         android:layout_height="@dimen/s9_avatar_mine"
-        android:layout_marginStart="@dimen/space_s"
         android:background="@drawable/bg_avatar_circle"
         android:contentDescription="@string/character_avatar"
         android:padding="1dp"
