@@ -89,28 +89,6 @@
 | 📦 **模块化无损导入导出** | 剧本资产自由分享 | 角色卡、世界观设定、聊天记录均可独立导出，亦可一键打包成专属剧本包，便于创作者社区传播与二次创作。 |
 | 🔐 **军工级密钥保护** | Android Keystore | API Key 经 Android Keystore 硬件安全芯片多层非对称/对称加密，杜绝明文写入 Preferences。多配置档案秒级热切换。 |
 
----
-
-## 🖼️ 视觉与交互演示
-
-<div align="center">
-  <table border="0">
-    <tr>
-      <td align="center" width="33%">
-        <b>🎭 群聊交锋演播室</b><br/><br/>
-        <img src="docs_s9_chat_screenshot.png" alt="群聊演出界面" width="280" />
-      </td>
-      <td align="center" width="33%">
-        <b>📜 剧本与多角色中枢</b><br/><br/>
-        <img src="build/tmp_shot/s6_script_detail.png" alt="剧本详情页" width="280" />
-      </td>
-      <td align="center" width="33%">
-        <b>🃏 细腻角色卡装配</b><br/><br/>
-        <img src="build/tmp_shot/s7_char_edit.png" alt="角色卡编辑" width="280" />
-      </td>
-    </tr>
-  </table>
-</div>
 
 ---
 
