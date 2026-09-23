@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 5,
-    "identityHash": "27b3def32ebb9621e26a916edf911f20",
+    "identityHash": "88705be98d706917c7342c599cd449b0",
     "entities": [
       {
         "tableName": "scripts",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT, `one_line` TEXT, `cover_ref` TEXT, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `sort_index` INTEGER NOT NULL, `media_mode` TEXT, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT, `one_line` TEXT, `cover_ref` TEXT, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `sort_index` INTEGER NOT NULL, `media_mode` TEXT NOT NULL, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -54,7 +54,7 @@
             "fieldPath": "media_mode",
             "columnName": "media_mode",
             "affinity": "TEXT",
-            "notNull": false
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -1628,7 +1628,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '27b3def32ebb9621e26a916edf911f20')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '88705be98d706917c7342c599cd449b0')"
     ]
   }
 }

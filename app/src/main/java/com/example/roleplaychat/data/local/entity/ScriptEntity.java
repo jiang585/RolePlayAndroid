@@ -32,6 +32,7 @@ public class ScriptEntity {
     public int sort_index;
 
     /** TEXT_ONLY for legacy scripts; VISUAL requires character visual profiles. */
+    @NonNull
     public String media_mode = "TEXT_ONLY";
 
     public ScriptEntity() {
