@@ -71,6 +71,10 @@ public class SettingsViewModel extends ViewModel {
         events.setValue(new SingleEvent<>("huajing_cleared"));
     }
 
+    public boolean isHuajingConfigured() {
+        return imageGenerationGateway != null && imageGenerationGateway.isConfigured();
+    }
+
     public LiveData<ApiConfig> getConfig() {
         return config;
     }

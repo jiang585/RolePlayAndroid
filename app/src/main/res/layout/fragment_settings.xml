@@ -295,6 +295,13 @@
                     android:layout_marginTop="4dp"
                     android:text="首次输入电脑端地址和配对码，之后会长期保持配对。"
                     android:textColor="@color/text_secondary" />
+                <TextView
+                    android:id="@+id/text_huajing_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="当前状态：未配对"
+                    android:textColor="@color/text_secondary" />
                 <EditText
                     android:id="@+id/input_huajing_url"
                     android:layout_width="match_parent"

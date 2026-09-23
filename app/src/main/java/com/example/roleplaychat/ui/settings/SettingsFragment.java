@@ -9,6 +9,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.AdapterView;
 import android.widget.Toast;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -44,6 +45,7 @@ public class SettingsFragment extends Fragment {
     private EditText maxTokensInput;
     private Spinner providerSpinner;
     private boolean applyingConfig;
+    private TextView huajingStatus;
     /** 当前正在编辑的档案 id；null 表示新建。 */
     @Nullable
     private String editingProfileId;
@@ -79,6 +81,8 @@ public class SettingsFragment extends Fragment {
 
         EditText huajingUrl = view.findViewById(R.id.input_huajing_url);
         EditText huajingCode = view.findViewById(R.id.input_huajing_code);
+        huajingStatus = view.findViewById(R.id.text_huajing_status);
+        renderHuajingStatus();
         view.findViewById(R.id.btn_pair_huajing).setOnClickListener(v ->
                 viewModel.pairHuajing(textOf(huajingUrl), textOf(huajingCode)));
         view.findViewById(R.id.btn_clear_huajing).setOnClickListener(v -> viewModel.clearHuajingPairing());
@@ -276,11 +280,21 @@ public class SettingsFragment extends Fragment {
             Toast.makeText(requireContext(), value.substring("error:".length()),
                     Toast.LENGTH_SHORT).show();
         } else if (value.equals("huajing_paired")) {
+            renderHuajingStatus();
             Toast.makeText(requireContext(), "Huajing 已配对", Toast.LENGTH_SHORT).show();
         } else if (value.equals("huajing_cleared")) {
+            renderHuajingStatus();
             Toast.makeText(requireContext(), "Huajing 配对已解除", Toast.LENGTH_SHORT).show();
         } else if (value.startsWith("huajing_pair_failed:")) {
             Toast.makeText(requireContext(), "配对失败：" + value.substring("huajing_pair_failed:".length()), Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void renderHuajingStatus() {
+        if (huajingStatus != null) {
+            huajingStatus.setText(viewModel.isHuajingConfigured()
+                    ? "当前状态：已配对，令牌已保存"
+                    : "当前状态：未配对");
         }
     }
 
