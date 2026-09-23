@@ -135,8 +135,15 @@ public class CharacterEditViewModel extends ViewModel {
                     ImageGenerationStatus ready = null;
                     for (int poll = 0; poll < 300; poll++) {
                         ready = imageGateway.status(created.getJobId());
+                        if (ready == null) throw new IllegalStateException("Huajing 返回空状态");
                         if (ready.getState() == ImageGenerationStatus.State.READY) break;
-                        if (ready.getState() == ImageGenerationStatus.State.FAILED_FINAL) throw new IllegalStateException("Huajing 生成失败");
+                        if (ready.getState() == ImageGenerationStatus.State.FAILED_FINAL
+                                || ready.getState() == ImageGenerationStatus.State.FAILED_RETRYABLE
+                                || ready.getState() == ImageGenerationStatus.State.CANCELLED
+                                || ready.getState() == ImageGenerationStatus.State.EXPIRED) {
+                            String detail = ready.getErrorCode() == null ? "未知错误" : ready.getErrorCode();
+                            throw new IllegalStateException("Huajing 生成失败：" + detail);
+                        }
                         Thread.sleep(1200L);
                     }
                     if (ready == null || ready.getResultAssetId() == null) throw new IllegalStateException("Huajing 生成超时");

@@ -155,9 +155,17 @@ public final class HuajingLanClient implements ImageGenerationGateway {
         catch (Exception ignored) { parsed = ImageGenerationStatus.State.READY; }
         float progress = json != null && json.has("progress") ? json.get("progress").getAsFloat() : 0f;
         String stage = json != null && json.has("stage") ? json.get("stage").getAsString() : "";
-        String asset = json != null && json.has("resultAssetId") ? json.get("resultAssetId").getAsString() : null;
-        String error = json != null && json.has("errorCode") ? json.get("errorCode").getAsString() : null;
+        String asset = nullableString(json, "resultAssetId");
+        String error = nullableString(json, "errorCode");
         return new ImageGenerationStatus(id, parsed, stage, progress, asset, error);
+    }
+
+    /** Gson 的 JsonNull 也满足 has()，必须先判断 null，避免轮询状态时崩溃。 */
+    @Nullable
+    private static String nullableString(@Nullable JsonObject json, String name) {
+        if (json == null || !json.has(name) || json.get(name).isJsonNull()) return null;
+        try { return json.get(name).getAsString(); }
+        catch (RuntimeException ignored) { return null; }
     }
 
     private String url(String path) { return baseUrl + path; }
