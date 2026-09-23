@@ -31,6 +31,9 @@ public class ScriptEntity {
 
     public int sort_index;
 
+    /** TEXT_ONLY for legacy scripts; VISUAL requires character visual profiles. */
+    public String media_mode = "TEXT_ONLY";
+
     public ScriptEntity() {
     }
 
@@ -43,5 +46,12 @@ public class ScriptEntity {
         this.created_at = createdAt;
         this.updated_at = updatedAt;
         this.sort_index = sortIndex;
+    }
+
+    public ScriptEntity(String id, String name, @Nullable String oneLine,
+                        @Nullable String coverRef, long createdAt, long updatedAt, int sortIndex,
+                        String mediaMode) {
+        this(id, name, oneLine, coverRef, createdAt, updatedAt, sortIndex);
+        this.media_mode = mediaMode == null ? "TEXT_ONLY" : mediaMode;
     }
 }

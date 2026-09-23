@@ -49,6 +49,9 @@ public interface ScriptDao {
     @Query("UPDATE scripts SET updated_at = :now WHERE id = :id")
     int touchUpdatedAt(String id, long now);
 
+    @Query("UPDATE scripts SET media_mode = :mediaMode, updated_at = :now WHERE id = :id")
+    int setMediaMode(String id, String mediaMode, long now);
+
     @Query("SELECT COUNT(*) FROM scripts")
     int count();
 
