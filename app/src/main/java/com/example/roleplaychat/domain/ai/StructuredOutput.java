@@ -59,5 +59,6 @@ public final class StructuredOutput {
         @SerializedName("framing") public String framing;
         @SerializedName("mood") public String mood;
         @SerializedName("outfit") public String outfit;
+        @SerializedName("contains_character") public Boolean containsCharacter;
     }
 }

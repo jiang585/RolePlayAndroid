@@ -366,6 +366,69 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_l"
+            style="@style/Widget.RolePlayChat.Card">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="@dimen/space_l">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="视觉身份设定（有图剧本必填）"
+                    android:textSize="15sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="上传一张清晰正脸作为固定参考；后续人物照片会沿用这张脸。"
+                    android:textColor="@color/text_secondary" />
+                <ImageView
+                    android:id="@+id/iv_visual_face"
+                    android:layout_width="160dp"
+                    android:layout_height="160dp"
+                    android:layout_marginTop="@dimen/space_m"
+                    android:scaleType="centerCrop"
+                    android:contentDescription="正脸参考图"
+                    android:src="@drawable/ic_avatar_placeholder" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_pick_visual_face"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_s"
+                    android:text="上传正脸参考图"
+                    style="@style/Widget.RolePlayChat.Button.Quiet" />
+                <EditText
+                    android:id="@+id/input_visual_description"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_s"
+                    android:hint="固定外貌：发型、五官、肤色、明显特征"
+                    android:inputType="textMultiLine"
+                    android:minLines="2" />
+                <EditText
+                    android:id="@+id/input_visual_height"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_s"
+                    android:hint="身高，例如 168cm"
+                    android:inputType="text" />
+                <EditText
+                    android:id="@+id/input_visual_body"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_s"
+                    android:hint="体型，例如 偏瘦、匀称"
+                    android:inputType="text" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_save_character"
             android:layout_width="match_parent"

@@ -90,9 +90,20 @@ public class ChatMessageAdapter extends ListAdapter<ChatListItem, RecyclerView.V
                     ChatMessage newMessage = newItem.getMessage();
                     return java.util.Objects.equals(oldMessage.getContent(), newMessage.getContent())
                             && java.util.Objects.equals(oldMessage.getStatus(), newMessage.getStatus())
+                            && sameAttachments(oldMessage.getAttachments(), newMessage.getAttachments())
                             && oldMessage.getSequence() == newMessage.getSequence();
                 }
             };
+
+    private static boolean sameAttachments(List<MessageAttachment> a, List<MessageAttachment> b) {
+        if (a.size() != b.size()) return false;
+        for (int i = 0; i < a.size(); i++) {
+            if (!java.util.Objects.equals(a.get(i).getId(), b.get(i).getId())
+                    || a.get(i).getStatus() != b.get(i).getStatus()
+                    || !java.util.Objects.equals(a.get(i).getLocalPath(), b.get(i).getLocalPath())) return false;
+        }
+        return true;
+    }
 
     @Override
     public int getItemViewType(int position) {

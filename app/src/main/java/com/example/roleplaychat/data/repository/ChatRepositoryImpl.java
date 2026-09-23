@@ -34,11 +34,12 @@ public class ChatRepositoryImpl implements ChatRepository {
 
     @Override
     public LiveData<List<ChatMessage>> observeLatest(String scriptId, int limit) {
-        return Transformations.map(dao.observeLatest(scriptId, limit), entities -> {
+        return Transformations.map(dao.observeLatestWithAttachments(scriptId, limit), entities -> {
             // 倒序读取，UI 需正序展示，因此这里反转为正序
             List<ChatMessage> result = new ArrayList<>(entities.size());
             for (int i = entities.size() - 1; i >= 0; i--) {
-                result.add(toMessage(entities.get(i)));
+                com.example.roleplaychat.data.local.entity.MessageWithAttachments relation = entities.get(i);
+                result.add(EntityMapper.toMessage(relation.message, relation.attachments));
             }
             return result;
         });

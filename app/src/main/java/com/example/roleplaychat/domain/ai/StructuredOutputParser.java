@@ -110,7 +110,8 @@ public final class StructuredOutputParser {
                     messageId = requestId + ":" + messageId;
                 }
                 imageActions.add(new AiImageAction(actionId, messageId, action.characterId.trim(), intent, trigger,
-                        action.scene.trim(), trimNullable(action.framing), trimNullable(action.mood), trimNullable(action.outfit)));
+                        action.scene.trim(), trimNullable(action.framing), trimNullable(action.mood), trimNullable(action.outfit),
+                        action.containsCharacter == null ? intent != AiImageAction.Intent.SCENE_SHARE : action.containsCharacter));
                 imageIndex++;
             }
         }

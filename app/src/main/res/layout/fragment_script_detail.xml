@@ -36,6 +36,13 @@
                 app:icon="@drawable/ic_send"
                 app:iconGravity="textStart"
                 app:iconPadding="10dp" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_script_media_mode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_s"
+                android:text="剧本图片模式：无图"
+                style="@style/Widget.RolePlayChat.Button.Quiet" />
         </LinearLayout>
 
         <!-- 世界观设定卡片 -->
@@ -199,7 +206,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/section_gap"
-            android:text="@string/import_export_title"
+            android:text="@string/script_detail_tools"
             android:textSize="@dimen/text_title"
             android:textStyle="bold"
             android:textColor="@color/text_primary" />
@@ -208,22 +215,20 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/space_s"
-            android:orientation="horizontal">
+            android:orientation="vertical">
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_import"
-                android:layout_width="0dp"
+                android:id="@+id/btn_export_script"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/character_import_title"
+                android:text="导出本剧本"
                 style="@style/Widget.RolePlayChat.Button.Quiet" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_appearance"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/space_s"
-                android:layout_weight="1"
+                android:layout_marginTop="@dimen/space_s"
                 android:text="@string/appearance_title"
                 style="@style/Widget.RolePlayChat.Button.Quiet" />
         </LinearLayout>

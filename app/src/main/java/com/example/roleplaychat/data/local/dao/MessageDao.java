@@ -8,6 +8,7 @@ import androidx.room.Query;
 import androidx.room.Transaction;
 
 import com.example.roleplaychat.data.local.entity.MessageEntity;
+import com.example.roleplaychat.data.local.entity.MessageWithAttachments;
 
 import java.util.List;
 
@@ -23,6 +24,10 @@ public interface MessageDao {
 
     @Query("SELECT * FROM messages WHERE script_id = :scriptId ORDER BY sequence DESC LIMIT :limit")
     LiveData<List<MessageEntity>> observeLatest(String scriptId, int limit);
+
+    @Transaction
+    @Query("SELECT * FROM messages WHERE script_id = :scriptId ORDER BY sequence DESC LIMIT :limit")
+    LiveData<List<MessageWithAttachments>> observeLatestWithAttachments(String scriptId, int limit);
 
     @Query("SELECT * FROM messages WHERE script_id = :scriptId AND sequence < :beforeSequence " +
             "ORDER BY sequence DESC LIMIT :limit")

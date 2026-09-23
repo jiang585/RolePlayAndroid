@@ -30,6 +30,7 @@ public final class LocalAssetStore {
     public static final String DIR_EXPORTS = "exports";
     public static final String DIR_TMP = "tmp";
     public static final String DIR_GENERATED = "generated";
+    public static final String DIR_IDENTITIES = "identities";
     public static final String DIR_PACKAGES = "packages";
 
     /** 单个资产大小上限（导入单文件 20 MB，架构文档 §2.3）。 */
@@ -140,7 +141,7 @@ public final class LocalAssetStore {
 
     /** 删除不再被引用的孤儿资产（CleanupWorker 使用，架构文档 §6.3）。 */
     public void deleteOrphanAssets(Set<String> referencedRefs) {
-        for (String subDir : new String[]{DIR_AVATARS, DIR_BACKGROUNDS, DIR_COVERS, DIR_GENERATED}) {
+        for (String subDir : new String[]{DIR_AVATARS, DIR_BACKGROUNDS, DIR_COVERS, DIR_GENERATED, DIR_IDENTITIES}) {
             File dir = new File(baseDir, subDir);
             File[] files = dir.listFiles();
             if (files == null) {

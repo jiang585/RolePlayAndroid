@@ -54,29 +54,30 @@ public final class ImageGenerationScheduler {
     public void enqueue(String scriptId, List<AiImageAction> actions, String requestId, long now) {
         if (actions == null || actions.isEmpty()) return;
         Script script = scriptRepository.getById(scriptId);
-        if (script == null) return;
-        // 旧剧本收到第一次图片动作时原地升级，保留原有剧本 ID、聊天记录和文本设定。
-        if (!script.isVisual()) {
-            scriptRepository.setMediaMode(scriptId, Script.MediaMode.VISUAL, now);
-        }
+        if (script == null || !script.isVisual()) return;
         for (AiImageAction action : actions) enqueueOne(scriptId, action, requestId, now);
     }
 
     private void enqueueOne(String scriptId, AiImageAction action, String requestId, long now) {
+        // action 的 message_id 必须来自本批次事件，避免把图片错挂到旧消息上。
         CharacterVisualProfile profile = visualRepository.getByCharacterId(action.getCharacterId());
+        if (action.isIncludeCharacter() && (profile == null || !profile.isReady())) return;
         String jobId = idGenerator.newRequestId();
         ImageGenerationJobEntity job = new ImageGenerationJobEntity();
         job.id = jobId; job.script_id = scriptId; job.character_id = action.getCharacterId();
         job.message_id = action.getMessageId();
+        if (job.message_id != null && messageDao.countById(job.message_id) == 0) {
+            job.message_id = null;
+        }
         if (job.message_id == null) {
             com.example.roleplaychat.data.local.entity.MessageEntity related =
                     messageDao.findLatestByRequestAndCharacter(requestId, action.getCharacterId());
             if (related != null) job.message_id = related.id;
         }
         job.client_job_id = "rp-" + jobId; job.trigger = action.getTrigger().name(); job.intent = action.getIntent().name();
-        job.model = profile != null && profile.isReady() ? "qwenimage2.1" : "zimage";
-        job.mode = profile != null && profile.isReady() ? "edit" : "txt2img";
-        job.status = "CREATED"; job.prompt_snapshot = buildPrompt(profile, action); job.retry_count = 0; job.created_at = now;
+        job.model = action.isIncludeCharacter() ? "qwenimage2.1" : "zimage";
+        job.mode = action.isIncludeCharacter() ? "edit" : "txt2img";
+        job.status = "CREATED"; job.prompt_snapshot = buildPrompt(action.isIncludeCharacter() ? profile : null, action); job.retry_count = 0; job.created_at = now;
         jobDao.insert(job);
         if (job.message_id != null) insertPendingAttachment(job, action);
         executors.networkIO().execute(() -> run(job, profile, action));
@@ -85,7 +86,7 @@ public final class ImageGenerationScheduler {
     private void run(ImageGenerationJobEntity job, @Nullable CharacterVisualProfile profile, AiImageAction action) {
         try {
             job.status = "UPLOADING_REFERENCES"; job.started_at = System.currentTimeMillis(); jobDao.update(job);
-            List<String> refs = profile == null ? Collections.emptyList() : profile.getAssets().isEmpty()
+            List<String> refs = !action.isIncludeCharacter() || profile == null ? Collections.emptyList() : profile.getAssets().isEmpty()
                     ? Collections.emptyList() : Collections.singletonList(profile.getAssets().get(0).getLocalPath());
             java.util.ArrayList<String> remote = new java.util.ArrayList<>();
             for (String ref : refs) {

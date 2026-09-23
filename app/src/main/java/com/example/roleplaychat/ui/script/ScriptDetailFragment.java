@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -20,10 +21,12 @@ import com.example.roleplaychat.di.AppContainer;
 import com.example.roleplaychat.domain.model.CharacterProfile;
 import com.example.roleplaychat.domain.model.PlayerIdentity;
 import com.example.roleplaychat.domain.model.Script;
+import com.example.roleplaychat.domain.model.CharacterVisualProfile;
 import com.example.roleplaychat.domain.model.WorldSetting;
 import com.example.roleplaychat.ui.character.CharacterListAdapter;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.List;
 
@@ -68,6 +71,7 @@ public class ScriptDetailFragment extends Fragment {
 
         MaterialButton chatButton = view.findViewById(R.id.btn_enter_chat);
         chatButton.setOnClickListener(v -> navigate(R.id.action_scriptDetail_to_chat));
+        view.findViewById(R.id.btn_script_media_mode).setOnClickListener(v -> showMediaModeDialog());
 
         MaterialButton identityButton = view.findViewById(R.id.btn_choose_identity);
         identityButton.setOnClickListener(v -> navigate(R.id.action_scriptDetail_to_identityChooser));
@@ -78,8 +82,8 @@ public class ScriptDetailFragment extends Fragment {
         MaterialButton characterManageButton = view.findViewById(R.id.btn_manage_characters);
         characterManageButton.setOnClickListener(v -> navigate(R.id.action_scriptDetail_to_characterList));
 
-        MaterialButton importButton = view.findViewById(R.id.btn_import);
-        importButton.setOnClickListener(v -> navigate(R.id.action_scriptDetail_to_characterImport));
+        MaterialButton dataTransferButton = view.findViewById(R.id.btn_export_script);
+        dataTransferButton.setOnClickListener(v -> navigate(R.id.action_scriptDetail_to_export));
 
         observe();
     }
@@ -99,7 +103,44 @@ public class ScriptDetailFragment extends Fragment {
         if (script != null && getView() != null) {
             TextView title = getView().findViewById(R.id.tv_script_name);
             title.setText(script.getName());
+            MaterialButton modeButton = getView().findViewById(R.id.btn_script_media_mode);
+            modeButton.setText(script.isVisual() ? "剧本图片模式：有图" : "剧本图片模式：无图");
         }
+    }
+
+    private void showMediaModeDialog() {
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle("剧本图片模式")
+                .setItems(new String[]{"无图剧本（只聊天）", "有图剧本（角色可发照片）"},
+                        (dialog, selected) -> {
+                            if (selected == 0) {
+                                container.executors.diskIO().execute(() -> container.scriptRepository.setMediaMode(
+                                        scriptId, Script.MediaMode.TEXT_ONLY, System.currentTimeMillis()));
+                            } else {
+                                enableVisualMode();
+                            }
+                        })
+                .show();
+    }
+
+    private void enableVisualMode() {
+        container.executors.diskIO().execute(() -> {
+            List<CharacterProfile> characters = container.characterRepository.getEnabledByScriptId(scriptId);
+            for (CharacterProfile character : characters) {
+                CharacterVisualProfile profile = container.characterVisualRepository.getByCharacterId(character.getId());
+                if (profile == null || !profile.isReady()
+                        || profile.getAppearanceJson() == null
+                        || profile.getAppearanceJson().contains("身高：；")
+                        || profile.getAppearanceJson().endsWith("体型：")) {
+                    container.executors.mainThread().execute(() -> Toast.makeText(requireContext(),
+                            "请先为角色「" + character.getName() + "」上传正脸并填写身高体型", Toast.LENGTH_LONG).show());
+                    return;
+                }
+            }
+            container.scriptRepository.setMediaMode(scriptId, Script.MediaMode.VISUAL, System.currentTimeMillis());
+            container.executors.mainThread().execute(() -> Toast.makeText(requireContext(),
+                    "已启用有图剧本", Toast.LENGTH_SHORT).show());
+        });
     }
 
     private void renderWorld(WorldSetting world) {

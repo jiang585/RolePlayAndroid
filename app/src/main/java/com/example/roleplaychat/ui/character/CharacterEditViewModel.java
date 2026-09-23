@@ -5,8 +5,11 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.example.roleplaychat.data.file.ImageImporter;
+import com.example.roleplaychat.data.file.LocalAssetStore;
 import com.example.roleplaychat.domain.model.AppError;
 import com.example.roleplaychat.domain.model.CharacterProfile;
+import com.example.roleplaychat.domain.model.CharacterVisualAsset;
+import com.example.roleplaychat.domain.model.CharacterVisualProfile;
 import com.example.roleplaychat.domain.model.ApiConfig;
 import com.example.roleplaychat.domain.model.AppErrorCode;
 import com.example.roleplaychat.domain.model.PromptMessage;
@@ -14,6 +17,9 @@ import com.example.roleplaychat.domain.repository.AiRepository;
 import com.example.roleplaychat.domain.repository.AiStreamListener;
 import com.example.roleplaychat.domain.repository.SettingsRepository;
 import com.example.roleplaychat.domain.repository.CharacterRepository;
+import com.example.roleplaychat.domain.repository.CharacterVisualRepository;
+import com.example.roleplaychat.domain.repository.ScriptRepository;
+import com.example.roleplaychat.domain.model.Script;
 import com.example.roleplaychat.domain.usecase.SaveCharacterUseCase;
 import com.example.roleplaychat.ui.common.SingleEvent;
 
@@ -33,6 +39,14 @@ public class CharacterEditViewModel extends ViewModel {
     private final com.example.roleplaychat.util.AppExecutors executors;
     private final AiRepository aiRepository;
     private final SettingsRepository settingsRepository;
+    private final CharacterVisualRepository visualRepository;
+    private final ScriptRepository scriptRepository;
+    private final LocalAssetStore assetStore;
+    private final MutableLiveData<CharacterVisualProfile> visualProfile = new MutableLiveData<>();
+    private android.net.Uri pendingFaceUri;
+    private String visualDescription;
+    private String heightText;
+    private String bodyType;
 
     private final MutableLiveData<SingleEvent<String>> events = new MutableLiveData<>();
     private final MutableLiveData<String> avatarRef = new MutableLiveData<>();
@@ -47,13 +61,34 @@ public class CharacterEditViewModel extends ViewModel {
                                    ImageImporter imageImporter,
                                    AiRepository aiRepository,
                                    SettingsRepository settingsRepository,
-                                   com.example.roleplaychat.util.AppExecutors executors) {
+                                   com.example.roleplaychat.util.AppExecutors executors,
+                                   CharacterVisualRepository visualRepository,
+                                   ScriptRepository scriptRepository,
+                                   LocalAssetStore assetStore) {
         this.characterRepository = characterRepository;
         this.saveCharacterUseCase = saveCharacterUseCase;
         this.imageImporter = imageImporter;
         this.aiRepository = aiRepository;
         this.settingsRepository = settingsRepository;
         this.executors = executors;
+        this.visualRepository = visualRepository;
+        this.scriptRepository = scriptRepository;
+        this.assetStore = assetStore;
+    }
+
+    public CharacterEditViewModel(CharacterRepository characterRepository,
+                                   SaveCharacterUseCase saveCharacterUseCase,
+                                   ImageImporter imageImporter, AiRepository aiRepository,
+                                   SettingsRepository settingsRepository,
+                                   com.example.roleplaychat.util.AppExecutors executors) {
+        this(characterRepository, saveCharacterUseCase, imageImporter, aiRepository,
+                settingsRepository, executors, null, null, null);
+    }
+
+    public LiveData<CharacterVisualProfile> getVisualProfile() { return visualProfile; }
+    public void setFaceUri(android.net.Uri uri) { pendingFaceUri = uri; }
+    public void setVisualFields(String description, String height, String body) {
+        visualDescription = description; heightText = height; bodyType = body;
     }
 
     public LiveData<SingleEvent<String>> getEvents() {
@@ -108,6 +143,7 @@ public class CharacterEditViewModel extends ViewModel {
         } else {
             editing = characterRepository.getById(characterId);
             avatarRef.postValue(editing == null ? null : editing.getAvatarRef());
+            if (visualRepository != null) visualProfile.postValue(visualRepository.getByCharacterId(characterId));
         }
         loaded.postValue(true);
     }
@@ -220,14 +256,57 @@ public class CharacterEditViewModel extends ViewModel {
                 editing.getExtraJson());
         CharacterProfile toSave = updated;
         executors.diskIO().execute(() -> {
+            Script scriptBeforeSave = scriptRepository == null ? null : scriptRepository.getById(toSave.getScriptId());
+            CharacterVisualProfile priorVisual = visualRepository == null ? null : visualRepository.getByCharacterId(toSave.getId());
+            if (scriptBeforeSave != null && scriptBeforeSave.isVisual()
+                    && pendingFaceUri == null && (priorVisual == null || !priorVisual.isReady())) {
+                events.postValue(new SingleEvent<>("error:face_required"));
+                return;
+            }
+            if (scriptBeforeSave != null && scriptBeforeSave.isVisual()
+                    && (heightText == null || heightText.trim().isEmpty()
+                    || bodyType == null || bodyType.trim().isEmpty())) {
+                events.postValue(new SingleEvent<>("error:measurements_required"));
+                return;
+            }
             AppError error = saveCharacterUseCase.execute(toSave);
             if (error != null) {
                 events.postValue(new SingleEvent<>("error:" + error.getMessage()));
             } else {
+                if (visualRepository != null && scriptRepository != null) {
+                    CharacterVisualProfile existing = visualRepository.getByCharacterId(toSave.getId());
+                    String faceRef = pendingFaceUri == null ? null : imageImporter.importImage(LocalAssetStore.DIR_IDENTITIES, pendingFaceUri);
+                    if (pendingFaceUri != null && faceRef == null) {
+                        events.postValue(new SingleEvent<>("error:face"));
+                        return;
+                    }
+                    java.util.List<CharacterVisualAsset> assets = faceRef == null
+                            ? (existing == null ? java.util.Collections.emptyList() : existing.getAssets())
+                            : java.util.Collections.singletonList(new CharacterVisualAsset(
+                                    java.util.UUID.randomUUID().toString(),
+                                    existing == null ? java.util.UUID.randomUUID().toString() : existing.getId(),
+                                    faceRef, null, "FRONT_FACE", true, 0, 0, now));
+                    boolean hasFields = (visualDescription != null && !visualDescription.trim().isEmpty())
+                            || (heightText != null && !heightText.trim().isEmpty())
+                            || (bodyType != null && !bodyType.trim().isEmpty());
+                    if (faceRef != null || existing != null || hasFields) {
+                        String profileId = existing == null ? (assets.isEmpty() ? java.util.UUID.randomUUID().toString()
+                                : assets.get(0).getProfileId()) : existing.getId();
+                        String appearance = "身高：" + safe(heightText) + "；体型：" + safe(bodyType);
+                        CharacterVisualProfile profile = new CharacterVisualProfile(profileId, toSave.getId(),
+                                assets.isEmpty() ? CharacterVisualProfile.Status.NEEDS_SETUP : CharacterVisualProfile.Status.READY,
+                                faceRef == null && existing != null ? existing.getSource() : CharacterVisualProfile.Source.UPLOAD,
+                                existing == null ? 1 : existing.getVersion() + 1,
+                                safe(visualDescription), appearance, "", existing == null ? now : existing.getCreatedAt(), now, assets);
+                        visualRepository.save(profile);
+                    }
+                }
                 events.postValue(new SingleEvent<>("saved"));
             }
         });
     }
+
+    private static String safe(String value) { return value == null ? "" : value.trim(); }
 
     public void toggleEnabled(boolean enabled) {
         if (editing != null) {

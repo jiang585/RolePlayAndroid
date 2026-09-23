@@ -18,6 +18,7 @@ public final class AiImageAction {
     @Nullable private final String framing;
     @Nullable private final String mood;
     @Nullable private final String outfit;
+    private final boolean includeCharacter;
 
     public AiImageAction(String actionId, String characterId, Intent intent, Trigger trigger,
                          String scene, @Nullable String framing, @Nullable String mood,
@@ -28,6 +29,12 @@ public final class AiImageAction {
     public AiImageAction(String actionId, @Nullable String messageId, String characterId, Intent intent, Trigger trigger,
                          String scene, @Nullable String framing, @Nullable String mood,
                          @Nullable String outfit) {
+        this(actionId, messageId, characterId, intent, trigger, scene, framing, mood, outfit, true);
+    }
+
+    public AiImageAction(String actionId, @Nullable String messageId, String characterId, Intent intent, Trigger trigger,
+                         String scene, @Nullable String framing, @Nullable String mood,
+                         @Nullable String outfit, boolean includeCharacter) {
         this.actionId = Objects.requireNonNull(actionId);
         this.messageId = messageId;
         this.characterId = Objects.requireNonNull(characterId);
@@ -37,6 +44,7 @@ public final class AiImageAction {
         this.framing = framing;
         this.mood = mood;
         this.outfit = outfit;
+        this.includeCharacter = includeCharacter;
     }
 
     public String getActionId() { return actionId; }
@@ -48,4 +56,5 @@ public final class AiImageAction {
     @Nullable public String getFraming() { return framing; }
     @Nullable public String getMood() { return mood; }
     @Nullable public String getOutfit() { return outfit; }
+    public boolean isIncludeCharacter() { return includeCharacter; }
 }

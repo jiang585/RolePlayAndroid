@@ -19,6 +19,7 @@ import com.example.roleplaychat.R;
 import com.example.roleplaychat.RolePlayChatApp;
 import com.example.roleplaychat.di.ViewModelFactory;
 import com.example.roleplaychat.domain.model.CharacterProfile;
+import com.example.roleplaychat.domain.model.CharacterVisualProfile;
 import com.example.roleplaychat.ui.common.FilePickerHelper;
 import com.example.roleplaychat.ui.common.SingleEvent;
 import com.google.android.material.button.MaterialButton;
@@ -56,6 +57,11 @@ public class CharacterEditFragment extends Fragment {
     private android.widget.TextView aiProgressText;
 
     private ActivityResultLauncher<String> imagePicker;
+    private ActivityResultLauncher<String> facePicker;
+    private ImageView visualFaceView;
+    private EditText visualDescriptionInput;
+    private EditText visualHeightInput;
+    private EditText visualBodyInput;
 
     @Nullable
     @Override
@@ -77,7 +83,12 @@ public class CharacterEditFragment extends Fragment {
 
         bindViews(view);
         imagePicker = FilePickerHelper.registerImagePicker(this, viewModel::importAvatar);
+        facePicker = FilePickerHelper.registerImagePicker(this, uri -> {
+            viewModel.setFaceUri(uri);
+            if (uri != null) Glide.with(this).load(uri).into(visualFaceView);
+        });
         avatarView.setOnClickListener(v -> imagePicker.launch("image/*"));
+        view.findViewById(R.id.btn_pick_visual_face).setOnClickListener(v -> facePicker.launch("image/*"));
         saveButton.setOnClickListener(v -> save());
         aiEnhanceButton.setOnClickListener(v -> showAiEnhanceDialog());
 
@@ -91,6 +102,7 @@ public class CharacterEditFragment extends Fragment {
         viewModel.getAiGenerating().observe(getViewLifecycleOwner(), value -> renderGenerating(Boolean.TRUE.equals(value)));
         viewModel.getAiProgress().observe(getViewLifecycleOwner(), aiProgressText::setText);
         viewModel.getAiDraft().observe(getViewLifecycleOwner(), this::populate);
+        viewModel.getVisualProfile().observe(getViewLifecycleOwner(), this::renderVisualProfile);
         // 后台加载角色（DB 操作不得在主线程，架构文档 §3.2）
         ((RolePlayChatApp) requireActivity().getApplication()).container().executors
                 .diskIO().execute(() -> viewModel.load(scriptId, characterId));
@@ -112,6 +124,10 @@ public class CharacterEditFragment extends Fragment {
         sampleLinesInput = view.findViewById(R.id.input_char_sample_lines);
         systemPromptInput = view.findViewById(R.id.input_char_system_prompt);
         hiddenSettingInput = view.findViewById(R.id.input_char_hidden_setting);
+        visualFaceView = view.findViewById(R.id.iv_visual_face);
+        visualDescriptionInput = view.findViewById(R.id.input_visual_description);
+        visualHeightInput = view.findViewById(R.id.input_visual_height);
+        visualBodyInput = view.findViewById(R.id.input_visual_body);
         saveButton = view.findViewById(R.id.btn_save_character);
         aiEnhanceButton = view.findViewById(R.id.btn_ai_enhance_character);
         aiProgressBar = view.findViewById(R.id.progress_character_ai);
@@ -155,12 +171,30 @@ public class CharacterEditFragment extends Fragment {
     }
 
     private void save() {
+        viewModel.setVisualFields(textOf(visualDescriptionInput), textOf(visualHeightInput), textOf(visualBodyInput));
         viewModel.save(
                 textOf(nameInput), textOf(aliasesInput), textOf(genderInput), textOf(ageInput),
                 textOf(personalityInput), textOf(backstoryInput), textOf(speakingStyleInput),
                 textOf(catchphrasesInput), textOf(strengthsInput), textOf(flawsInput),
                 textOf(relationshipsInput), textOf(sampleLinesInput), textOf(systemPromptInput),
                 textOf(hiddenSettingInput), System.currentTimeMillis());
+    }
+
+    private void renderVisualProfile(@Nullable CharacterVisualProfile profile) {
+        if (profile == null) return;
+        visualDescriptionInput.setText(profile.getIdentityPrompt());
+        String appearance = profile.getAppearanceJson();
+        if (appearance != null) {
+            for (String part : appearance.split("；")) {
+                if (part.startsWith("身高：")) visualHeightInput.setText(part.substring(3));
+                if (part.startsWith("体型：")) visualBodyInput.setText(part.substring(3));
+            }
+        }
+        if (!profile.getAssets().isEmpty()) {
+            java.io.File file = ((RolePlayChatApp) requireActivity().getApplication())
+                    .container().assetStore.resolve(profile.getAssets().get(0).getLocalPath());
+            if (file != null) Glide.with(this).load(file).into(visualFaceView);
+        }
     }
 
     private void showAiEnhanceDialog() {
@@ -197,6 +231,10 @@ public class CharacterEditFragment extends Fragment {
             String code = value.substring("error:".length());
             if (code.equals("avatar")) {
                 Toast.makeText(requireContext(), "头像导入失败", Toast.LENGTH_SHORT).show();
+            } else if (code.equals("face") || code.equals("face_required")) {
+                Toast.makeText(requireContext(), "请上传清晰正脸参考图", Toast.LENGTH_LONG).show();
+            } else if (code.equals("measurements_required")) {
+                Toast.makeText(requireContext(), "有图剧本需要填写身高和体型", Toast.LENGTH_LONG).show();
             } else {
                 Toast.makeText(requireContext(), com.example.roleplaychat.ui.common.ErrorMessageMapper.map(
                         com.example.roleplaychat.domain.model.AppErrorCode.fromCode(code)), Toast.LENGTH_SHORT).show();
