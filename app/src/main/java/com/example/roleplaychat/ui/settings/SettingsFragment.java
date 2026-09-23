@@ -77,6 +77,12 @@ public class SettingsFragment extends Fragment {
         MaterialButton testButton = view.findViewById(R.id.btn_test_connection);
         testButton.setOnClickListener(v -> testCurrentForm());
 
+        EditText huajingUrl = view.findViewById(R.id.input_huajing_url);
+        EditText huajingCode = view.findViewById(R.id.input_huajing_code);
+        view.findViewById(R.id.btn_pair_huajing).setOnClickListener(v ->
+                viewModel.pairHuajing(textOf(huajingUrl), textOf(huajingCode)));
+        view.findViewById(R.id.btn_clear_huajing).setOnClickListener(v -> viewModel.clearHuajingPairing());
+
         MaterialButton addProfileButton = view.findViewById(R.id.btn_add_profile);
         addProfileButton.setOnClickListener(v -> startNewProfile());
 
@@ -269,6 +275,12 @@ public class SettingsFragment extends Fragment {
         } else if (value.startsWith("error:")) {
             Toast.makeText(requireContext(), value.substring("error:".length()),
                     Toast.LENGTH_SHORT).show();
+        } else if (value.equals("huajing_paired")) {
+            Toast.makeText(requireContext(), "Huajing 已配对", Toast.LENGTH_SHORT).show();
+        } else if (value.equals("huajing_cleared")) {
+            Toast.makeText(requireContext(), "Huajing 配对已解除", Toast.LENGTH_SHORT).show();
+        } else if (value.startsWith("huajing_pair_failed:")) {
+            Toast.makeText(requireContext(), "配对失败：" + value.substring("huajing_pair_failed:".length()), Toast.LENGTH_LONG).show();
         }
     }
 

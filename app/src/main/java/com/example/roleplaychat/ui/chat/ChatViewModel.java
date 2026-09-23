@@ -18,6 +18,7 @@ import com.example.roleplaychat.domain.repository.ScriptRepository;
 import com.example.roleplaychat.domain.usecase.AdvanceAiUseCase;
 import com.example.roleplaychat.domain.usecase.SendPlayerMessageUseCase;
 import com.example.roleplaychat.domain.usecase.StopGenerationUseCase;
+import com.example.roleplaychat.domain.usecase.SendCharacterImageUseCase;
 import com.example.roleplaychat.ui.common.SingleEvent;
 import com.example.roleplaychat.util.AppExecutors;
 
@@ -47,6 +48,7 @@ public class ChatViewModel extends ViewModel {
     private final SendPlayerMessageUseCase sendPlayerMessageUseCase;
     private final AdvanceAiUseCase advanceAiUseCase;
     private final StopGenerationUseCase stopGenerationUseCase;
+    private final SendCharacterImageUseCase sendCharacterImageUseCase;
     private final AppExecutors executors;
 
     private final MutableLiveData<ChatUiState> uiState = new MutableLiveData<>(
@@ -80,6 +82,7 @@ public class ChatViewModel extends ViewModel {
                          SendPlayerMessageUseCase sendPlayerMessageUseCase,
                          AdvanceAiUseCase advanceAiUseCase,
                          StopGenerationUseCase stopGenerationUseCase,
+                         SendCharacterImageUseCase sendCharacterImageUseCase,
                          AppExecutors executors) {
         this.scriptRepository = scriptRepository;
         this.characterRepository = characterRepository;
@@ -88,7 +91,30 @@ public class ChatViewModel extends ViewModel {
         this.sendPlayerMessageUseCase = sendPlayerMessageUseCase;
         this.advanceAiUseCase = advanceAiUseCase;
         this.stopGenerationUseCase = stopGenerationUseCase;
+        this.sendCharacterImageUseCase = sendCharacterImageUseCase;
         this.executors = executors;
+    }
+
+    /** 保持旧测试和外部装配代码兼容；旧调用不会暴露直接发图入口。 */
+    public ChatViewModel(ScriptRepository scriptRepository,
+                         CharacterRepository characterRepository,
+                         ChatRepository chatRepository,
+                         AppearanceRepository appearanceRepository,
+                         SendPlayerMessageUseCase sendPlayerMessageUseCase,
+                         AdvanceAiUseCase advanceAiUseCase,
+                         StopGenerationUseCase stopGenerationUseCase,
+                         AppExecutors executors) {
+        this(scriptRepository, characterRepository, chatRepository, appearanceRepository,
+                sendPlayerMessageUseCase, advanceAiUseCase, stopGenerationUseCase, null, executors);
+    }
+
+    public void sendCharacterImage(String characterId, String description) {
+        if (scriptId == null) return;
+        executors.diskIO().execute(() -> {
+            boolean accepted = sendCharacterImageUseCase != null && sendCharacterImageUseCase.send(scriptId, characterId, description,
+                    System.currentTimeMillis());
+            if (!accepted) events.postValue(new SingleEvent<>("当前剧本未启用图片功能或角色未就绪"));
+        });
     }
 
     public void setScriptId(String scriptId) {
@@ -439,7 +465,10 @@ public class ChatViewModel extends ViewModel {
     }
 
     public void clearChat() {
-        executors.diskIO().execute(() -> chatRepository.clearMessages(scriptId));
+        // 先使正在进行的请求失效，再清理；避免完成回调把回复重新写进已清空会话。
+        stopGeneration();
+        final String targetScriptId = scriptId;
+        executors.diskIO().execute(() -> chatRepository.clearMessages(targetScriptId));
     }
 
     private void setGenerating(boolean generating, String requestId) {

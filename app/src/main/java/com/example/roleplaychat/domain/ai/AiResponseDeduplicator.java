@@ -55,7 +55,8 @@ public final class AiResponseDeduplicator {
             }
         }
         return new AiBatch(candidate.getRequestId(), candidate.getScriptId(), kept, kept.isEmpty()
-                ? false : candidate.shouldContinueScene());
+                ? false : candidate.shouldContinueScene(), candidate.shouldAwaitPlayer(), candidate.getMomentActions(),
+                candidate.getImageActions());
     }
 
     private static boolean isNearDuplicate(String content, String other) {

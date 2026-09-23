@@ -38,6 +38,10 @@ public interface MessageDao {
             "ORDER BY sequence ASC LIMIT :limit")
     List<MessageEntity> loadAfter(String scriptId, long afterSequence, int limit);
 
+    @Query("SELECT * FROM messages WHERE request_id = :requestId AND character_id = :characterId "
+            + "ORDER BY sequence DESC LIMIT 1")
+    MessageEntity findLatestByRequestAndCharacter(String requestId, String characterId);
+
     @Query("SELECT COALESCE(MAX(sequence), 0) FROM messages WHERE script_id = :scriptId")
     long maxSequence(String scriptId);
 
@@ -49,6 +53,9 @@ public interface MessageDao {
 
     @Query("UPDATE messages SET content = :content WHERE id = :id")
     int updateContent(String id, String content);
+
+    @Query("UPDATE messages SET meta_json = meta_json WHERE id = :id")
+    int touch(String id);
 
     @Query("UPDATE messages SET status = :status WHERE request_id = :requestId AND status = 'STREAMING'")
     int markRequest(String requestId, String status);

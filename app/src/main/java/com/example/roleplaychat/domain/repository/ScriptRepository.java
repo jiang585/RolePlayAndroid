@@ -28,6 +28,8 @@ public interface ScriptRepository {
 
     void touchUpdatedAt(String scriptId, long now);
 
+    void setMediaMode(String scriptId, Script.MediaMode mediaMode, long now);
+
     /** 删除剧本：事务级联删除子记录。 */
     void deleteScript(String scriptId);
 

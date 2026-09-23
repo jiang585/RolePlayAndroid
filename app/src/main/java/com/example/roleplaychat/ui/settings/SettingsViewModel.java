@@ -12,6 +12,7 @@ import com.example.roleplaychat.domain.model.AppErrorCode;
 import com.example.roleplaychat.domain.repository.AiRepository;
 import com.example.roleplaychat.domain.repository.ScriptRepository;
 import com.example.roleplaychat.domain.repository.SettingsRepository;
+import com.example.roleplaychat.domain.repository.ImageGenerationGateway;
 import com.example.roleplaychat.domain.validation.ApiConfigValidator;
 import com.example.roleplaychat.ui.common.SingleEvent;
 import com.example.roleplaychat.util.AppExecutors;
@@ -27,6 +28,7 @@ public class SettingsViewModel extends ViewModel {
     private final AiRepository aiRepository;
     private final ScriptRepository scriptRepository;
     private final AppExecutors executors;
+    private final ImageGenerationGateway imageGenerationGateway;
 
     private final MutableLiveData<SingleEvent<String>> events = new MutableLiveData<>();
     private final MutableLiveData<List<ApiProfile>> profiles = new MutableLiveData<>();
@@ -36,12 +38,37 @@ public class SettingsViewModel extends ViewModel {
     public SettingsViewModel(SettingsRepository settingsRepository,
                              AiRepository aiRepository,
                              ScriptRepository scriptRepository,
-                             AppExecutors executors) {
+                             AppExecutors executors,
+                             ImageGenerationGateway imageGenerationGateway) {
         this.settingsRepository = settingsRepository;
         this.aiRepository = aiRepository;
         this.scriptRepository = scriptRepository;
         this.executors = executors;
+        this.imageGenerationGateway = imageGenerationGateway;
         this.config = settingsRepository.observeApiConfig();
+    }
+
+    public SettingsViewModel(SettingsRepository settingsRepository,
+                             AiRepository aiRepository, ScriptRepository scriptRepository,
+                             AppExecutors executors) {
+        this(settingsRepository, aiRepository, scriptRepository, executors, null);
+    }
+
+    public void pairHuajing(String baseUrl, String pairingCode) {
+        if (imageGenerationGateway == null) return;
+        executors.networkIO().execute(() -> {
+            try {
+                imageGenerationGateway.claimPairing(baseUrl.trim(), pairingCode.trim(), "RolePlayChat", UUID.randomUUID().toString());
+                events.postValue(new SingleEvent<>("huajing_paired"));
+            } catch (Exception error) {
+                events.postValue(new SingleEvent<>("huajing_pair_failed:" + error.getMessage()));
+            }
+        });
+    }
+
+    public void clearHuajingPairing() {
+        if (imageGenerationGateway != null) imageGenerationGateway.clearConfiguration();
+        events.setValue(new SingleEvent<>("huajing_cleared"));
     }
 
     public LiveData<ApiConfig> getConfig() {

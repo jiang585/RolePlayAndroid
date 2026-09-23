@@ -6,25 +6,32 @@ import com.example.roleplaychat.data.file.ImageImporter;
 import com.example.roleplaychat.data.file.LocalAssetStore;
 import com.example.roleplaychat.data.local.AppDatabase;
 import com.example.roleplaychat.data.remote.OpenAiServiceFactory;
+import com.example.roleplaychat.data.remote.HuajingLanClient;
 import com.example.roleplaychat.data.repository.AiRepositoryImpl;
 import com.example.roleplaychat.data.repository.AppearanceRepositoryImpl;
 import com.example.roleplaychat.data.repository.CharacterRepositoryImpl;
+import com.example.roleplaychat.data.repository.CharacterVisualRepositoryImpl;
 import com.example.roleplaychat.data.repository.ChatRepositoryImpl;
 import com.example.roleplaychat.data.repository.ImportExportRepositoryImpl;
+import com.example.roleplaychat.data.repository.MomentRepositoryImpl;
 import com.example.roleplaychat.data.repository.ScriptRepositoryImpl;
 import com.example.roleplaychat.data.repository.SettingsRepositoryImpl;
 import com.example.roleplaychat.data.repository.WorldRepositoryImpl;
 import com.example.roleplaychat.data.security.KeystoreSecretStore;
 import com.example.roleplaychat.data.security.SecretStore;
 import com.example.roleplaychat.domain.ai.AiTurnOrchestrator;
+import com.example.roleplaychat.domain.ai.ImageGenerationScheduler;
 import com.example.roleplaychat.domain.repository.AiRepository;
 import com.example.roleplaychat.domain.repository.AppearanceRepository;
 import com.example.roleplaychat.domain.repository.CharacterRepository;
+import com.example.roleplaychat.domain.repository.CharacterVisualRepository;
 import com.example.roleplaychat.domain.repository.ChatRepository;
 import com.example.roleplaychat.domain.repository.ImportExportRepository;
+import com.example.roleplaychat.domain.repository.MomentRepository;
 import com.example.roleplaychat.domain.repository.ScriptRepository;
 import com.example.roleplaychat.domain.repository.SettingsRepository;
 import com.example.roleplaychat.domain.repository.WorldRepository;
+import com.example.roleplaychat.domain.repository.ImageGenerationGateway;
 import com.example.roleplaychat.domain.usecase.AdvanceAiUseCase;
 import com.example.roleplaychat.domain.usecase.CreateScriptUseCase;
 import com.example.roleplaychat.domain.usecase.DeleteScriptUseCase;
@@ -32,6 +39,7 @@ import com.example.roleplaychat.domain.usecase.ExportDataUseCase;
 import com.example.roleplaychat.domain.usecase.ImportDataUseCase;
 import com.example.roleplaychat.domain.usecase.SaveCharacterUseCase;
 import com.example.roleplaychat.domain.usecase.SendPlayerMessageUseCase;
+import com.example.roleplaychat.domain.usecase.SendCharacterImageUseCase;
 import com.example.roleplaychat.domain.usecase.StopGenerationUseCase;
 import com.example.roleplaychat.domain.usecase.SwitchIdentityUseCase;
 import com.example.roleplaychat.util.AppExecutors;
@@ -61,14 +69,18 @@ public class AppContainer {
     public final ScriptRepository scriptRepository;
     public final WorldRepository worldRepository;
     public final CharacterRepository characterRepository;
+    public final CharacterVisualRepository characterVisualRepository;
     public final ChatRepository chatRepository;
     public final AppearanceRepository appearanceRepository;
     public final SettingsRepository settingsRepository;
     public final AiRepository aiRepository;
+    public final ImageGenerationGateway imageGenerationGateway;
     public final ImportExportRepository importExportRepository;
+    public final MomentRepository momentRepository;
 
     // AI 编排
     public final AiTurnOrchestrator aiOrchestrator;
+    public final ImageGenerationScheduler imageGenerationScheduler;
 
     // 用例
     public final CreateScriptUseCase createScriptUseCase;
@@ -80,6 +92,7 @@ public class AppContainer {
     public final StopGenerationUseCase stopGenerationUseCase;
     public final ImportDataUseCase importDataUseCase;
     public final ExportDataUseCase exportDataUseCase;
+    public final SendCharacterImageUseCase sendCharacterImageUseCase;
 
     public AppContainer(Context context) {
         this.context = context.getApplicationContext();
@@ -96,17 +109,25 @@ public class AppContainer {
         this.aiServiceFactory = new OpenAiServiceFactory(settingsRepository.getApiConfig());
         settingsRepository.setApiConfigChangeListener(aiServiceFactory::updateConfig);
         this.aiRepository = new AiRepositoryImpl(aiServiceFactory);
+        this.imageGenerationGateway = new HuajingLanClient(secretStore);
 
         this.scriptRepository = new ScriptRepositoryImpl(database);
         this.worldRepository = new WorldRepositoryImpl(database);
         this.characterRepository = new CharacterRepositoryImpl(database);
+        this.characterVisualRepository = new CharacterVisualRepositoryImpl(database);
         this.chatRepository = new ChatRepositoryImpl(database);
         this.appearanceRepository = new AppearanceRepositoryImpl(database);
         this.importExportRepository = new ImportExportRepositoryImpl(database, assetStore);
+        this.momentRepository = new MomentRepositoryImpl(database);
+        this.imageGenerationScheduler = new ImageGenerationScheduler(
+                scriptRepository, characterVisualRepository, imageGenerationGateway,
+                database.imageGenerationJobDao(), database.messageAttachmentDao(),
+                database.messageDao(),
+                assetStore, executors, idGenerator);
 
         this.aiOrchestrator = new AiTurnOrchestrator(
                 scriptRepository, worldRepository, characterRepository, chatRepository,
-                settingsRepository, aiRepository, idGenerator, "中文");
+                settingsRepository, momentRepository, aiRepository, idGenerator, "中文", imageGenerationScheduler);
 
         this.createScriptUseCase = new CreateScriptUseCase(scriptRepository);
         this.deleteScriptUseCase = new DeleteScriptUseCase(scriptRepository);
@@ -119,6 +140,8 @@ public class AppContainer {
         this.stopGenerationUseCase = new StopGenerationUseCase(advanceAiUseCase);
         this.importDataUseCase = new ImportDataUseCase(importExportRepository);
         this.exportDataUseCase = new ExportDataUseCase(importExportRepository);
+        this.sendCharacterImageUseCase = new SendCharacterImageUseCase(
+                scriptRepository, characterRepository, chatRepository, imageGenerationScheduler);
     }
 
     public Context context() {

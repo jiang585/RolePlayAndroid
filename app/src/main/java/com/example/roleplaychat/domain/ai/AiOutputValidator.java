@@ -8,6 +8,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * AI 输出校验器（架构文档 §8.4）：
@@ -26,25 +28,59 @@ public final class AiOutputValidator {
     public static AiBatch validate(AiBatch batch, Set<String> enabledCharacterIds) {
         List<AiEvent> valid = new ArrayList<>();
         for (AiEvent event : batch.getEvents()) {
-            if (valid.size() >= MAX_EVENTS) {
-                break;
-            }
-            if (event.getType() == AiEvent.Type.CHARACTER_TURN) {
-                if (event.getCharacterId() == null
-                        || !enabledCharacterIds.contains(event.getCharacterId())) {
-                    continue; // UNKNOWN_CHARACTER：丢弃该事件
+            for (AiEvent candidate : splitActionSegments(event)) {
+                if (valid.size() >= MAX_EVENTS) {
+                    break;
                 }
+                if (candidate.getType() == AiEvent.Type.CHARACTER_TURN) {
+                    if (candidate.getCharacterId() == null
+                            || !enabledCharacterIds.contains(candidate.getCharacterId())) {
+                        continue; // UNKNOWN_CHARACTER：丢弃该事件
+                    }
+                }
+                if (candidate.getContent().length() > MAX_EVENT_CONTENT) {
+                    String trimmed = candidate.getContent().substring(0, MAX_EVENT_CONTENT);
+                    valid.add(new AiEvent(candidate.getEventId(), candidate.getType(),
+                            candidate.getCharacterId(), trimmed, candidate.getTurnIndex()));
+                    continue;
+                }
+                valid.add(candidate);
             }
-            if (event.getContent().length() > MAX_EVENT_CONTENT) {
-                String trimmed = event.getContent().substring(0, MAX_EVENT_CONTENT);
-                valid.add(new AiEvent(event.getEventId(), event.getType(),
-                        event.getCharacterId(), trimmed, event.getTurnIndex()));
-                continue;
-            }
-            valid.add(event);
         }
+        boolean awaitPlayer = batch.shouldAwaitPlayer()
+                || SceneContinuationPolicy.requiresPlayerReply(valid);
         return new AiBatch(batch.getRequestId(), batch.getScriptId(), valid,
-                batch.shouldContinueScene());
+                batch.shouldContinueScene(), awaitPlayer, batch.getMomentActions(), batch.getImageActions());
+    }
+
+    /** 将角色消息中的舞台动作拆成旁白，确保角色气泡只保留口头台词。 */
+    private static List<AiEvent> splitActionSegments(AiEvent event) {
+        if (event.getType() != AiEvent.Type.CHARACTER_TURN) {
+            return java.util.Collections.singletonList(event);
+        }
+        Matcher matcher = Pattern.compile("（[^\\n]{1,160}）|\\([^\\n]{1,160}\\)|\\*[^\\n*]{1,160}\\*").matcher(event.getContent());
+        List<AiEvent> result = new ArrayList<>();
+        int cursor = 0;
+        int part = 0;
+        while (matcher.find()) {
+            addCharacterText(result, event, event.getContent().substring(cursor, matcher.start()), part++);
+            String action = matcher.group().trim();
+            if (!action.isEmpty()) {
+                result.add(new AiEvent(event.getEventId() + ":action:" + part++,
+                        AiEvent.Type.NARRATION, null, action, event.getTurnIndex()));
+            }
+            cursor = matcher.end();
+        }
+        addCharacterText(result, event, event.getContent().substring(cursor), part);
+        return result.isEmpty() ? java.util.Collections.singletonList(event) : result;
+    }
+
+    private static void addCharacterText(List<AiEvent> result, AiEvent source, String text, int part) {
+        String trimmed = text == null ? "" : text.trim();
+        if (!trimmed.isEmpty()) {
+            result.add(new AiEvent(source.getEventId() + ":speech:" + part,
+                    AiEvent.Type.CHARACTER_TURN, source.getCharacterId(), trimmed, source.getTurnIndex()));
+        }
     }
 
     /**
@@ -78,7 +114,9 @@ public final class AiOutputValidator {
             kept.add(event);
         }
         boolean continueScene = batch.shouldContinueScene() && !droppedAny;
-        return new AiBatch(batch.getRequestId(), batch.getScriptId(), kept, continueScene);
+        return new AiBatch(batch.getRequestId(), batch.getScriptId(), kept, continueScene,
+                batch.shouldAwaitPlayer() || SceneContinuationPolicy.requiresPlayerReply(kept),
+                batch.getMomentActions(), batch.getImageActions());
     }
 
     /** 兼容模型把 character_id 填成角色姓名/别名的情况，统一转换为本地 ID。 */
@@ -92,19 +130,24 @@ public final class AiOutputValidator {
                 continue;
             }
             String reference = event.getCharacterId().trim();
-            boolean matched = false;
+            com.example.roleplaychat.domain.model.CharacterProfile resolved = null;
+            boolean ambiguous = false;
             for (com.example.roleplaychat.domain.model.CharacterProfile character : characters) {
                 if (reference.equals(character.getId())
                         || reference.equalsIgnoreCase(character.getName())
                         || character.getAliases().stream().anyMatch(alias ->
                         reference.equalsIgnoreCase(alias))) {
-                    normalized.add(new AiEvent(event.getEventId(), event.getType(),
-                            character.getId(), event.getContent(), event.getTurnIndex()));
-                    matched = true;
-                    break;
+                    if (resolved != null && !resolved.getId().equals(character.getId())) {
+                        ambiguous = true;
+                        break;
+                    }
+                    resolved = character;
                 }
             }
-            if (!matched) {
+            if (resolved != null && !ambiguous) {
+                normalized.add(new AiEvent(event.getEventId(), event.getType(),
+                        resolved.getId(), event.getContent(), event.getTurnIndex()));
+            } else {
                 // Do not invent an in-scene speaker, but preserve the model's action/text instead
                 // of silently losing it because its character reference was not resolvable.
                 normalized.add(new AiEvent(event.getEventId(), AiEvent.Type.NARRATION,
@@ -112,7 +155,7 @@ public final class AiOutputValidator {
             }
         }
         return new AiBatch(batch.getRequestId(), batch.getScriptId(), normalized,
-                batch.shouldContinueScene());
+                batch.shouldContinueScene(), batch.shouldAwaitPlayer(), batch.getMomentActions(), batch.getImageActions());
     }
 
     /** 从角色列表构造启用 ID 集合。 */

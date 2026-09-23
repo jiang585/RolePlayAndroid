@@ -25,11 +25,14 @@
                 android:id="@+id/menu_chat_rules"
                 android:title="@string/chat_rules" />
             <item
-                android:id="@+id/menu_chat_export"
-                android:title="@string/chat_export" />
+                android:id="@+id/menu_chat_moments"
+                android:title="@string/moments_title" />
+            <item
+                android:id="@+id/menu_chat_send_image"
+                android:title="@string/chat_send_character_image" />
             <item
                 android:id="@+id/menu_chat_clear"
-                android:title="@string/settings_clear_chat" />
+                android:title="@string/chat_clear_history" />
         </menu>
     </item>
 </menu>

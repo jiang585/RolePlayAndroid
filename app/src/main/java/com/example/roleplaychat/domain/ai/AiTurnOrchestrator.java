@@ -18,6 +18,7 @@ import com.example.roleplaychat.domain.repository.CharacterRepository;
 import com.example.roleplaychat.domain.repository.ChatRepository;
 import com.example.roleplaychat.domain.repository.ScriptRepository;
 import com.example.roleplaychat.domain.repository.SettingsRepository;
+import com.example.roleplaychat.domain.repository.MomentRepository;
 import com.example.roleplaychat.domain.repository.WorldRepository;
 import com.example.roleplaychat.util.IdGenerator;
 
@@ -51,35 +52,61 @@ public final class AiTurnOrchestrator {
     private final CharacterRepository characterRepository;
     private final ChatRepository chatRepository;
     private final SettingsRepository settingsRepository;
+    private final MomentRepository momentRepository;
     private final AiRepository aiRepository;
     private final IdGenerator idGenerator;
     private final String language;
+    @Nullable
+    private final ImageGenerationScheduler imageGenerationScheduler;
 
     private final Object requestLock = new Object();
     private final Map<String, ActiveRequest> activeRequests = new HashMap<>();
+    /** 每次停止都会推进版本，即使网络回调已完成但尚未落库也不能再写入。 */
+    private final Map<String, Long> requestEpochs = new HashMap<>();
 
     private static final class ActiveRequest {
         private final String requestId;
+        private final long epoch;
         @Nullable
         private CancellableRequest request;
 
-        private ActiveRequest(String requestId) {
+        private ActiveRequest(String requestId, long epoch) {
             this.requestId = requestId;
+            this.epoch = epoch;
         }
     }
 
     public AiTurnOrchestrator(ScriptRepository scriptRepository, WorldRepository worldRepository,
-                              CharacterRepository characterRepository, ChatRepository chatRepository,
-                              SettingsRepository settingsRepository, AiRepository aiRepository,
+                               CharacterRepository characterRepository, ChatRepository chatRepository,
+                               SettingsRepository settingsRepository, AiRepository aiRepository,
+                               IdGenerator idGenerator, String language) {
+        this(scriptRepository, worldRepository, characterRepository, chatRepository,
+                settingsRepository, null, aiRepository, idGenerator, language, null);
+    }
+
+    public AiTurnOrchestrator(ScriptRepository scriptRepository, WorldRepository worldRepository,
+                               CharacterRepository characterRepository, ChatRepository chatRepository,
+                               SettingsRepository settingsRepository, MomentRepository momentRepository, AiRepository aiRepository,
                               IdGenerator idGenerator, String language) {
+        this(scriptRepository, worldRepository, characterRepository, chatRepository, settingsRepository,
+                momentRepository, aiRepository, idGenerator, language, null);
+    }
+
+    public AiTurnOrchestrator(ScriptRepository scriptRepository, WorldRepository worldRepository,
+                               CharacterRepository characterRepository, ChatRepository chatRepository,
+                               SettingsRepository settingsRepository, MomentRepository momentRepository, AiRepository aiRepository,
+                               IdGenerator idGenerator, String language,
+                               @Nullable ImageGenerationScheduler imageGenerationScheduler) {
         this.scriptRepository = scriptRepository;
         this.worldRepository = worldRepository;
         this.characterRepository = characterRepository;
         this.chatRepository = chatRepository;
         this.settingsRepository = settingsRepository;
+        this.momentRepository = momentRepository;
         this.aiRepository = aiRepository;
         this.idGenerator = idGenerator;
         this.language = language;
+        this.imageGenerationScheduler = imageGenerationScheduler;
     }
 
     /**
@@ -95,10 +122,12 @@ public final class AiTurnOrchestrator {
     public String start(String scriptId, AiRequest.Mode mode, int round,
                         @Nullable AiStreamListener listener, Callback callback) {
         String requestId = idGenerator.newRequestId();
-        ActiveRequest session = new ActiveRequest(requestId);
+        ActiveRequest session;
 
         ActiveRequest previous;
         synchronized (requestLock) {
+            long epoch = requestEpochs.getOrDefault(scriptId, 0L);
+            session = new ActiveRequest(requestId, epoch);
             previous = activeRequests.put(scriptId, session);
         }
         if (previous != null && previous.request != null) {
@@ -125,7 +154,8 @@ public final class AiTurnOrchestrator {
         int recentStart = Math.max(0, allMessages.size() - Math.max(1, recentCount));
         List<ChatMessage> recent = new ArrayList<>(allMessages.subList(recentStart, allMessages.size()));
         CharacterProfile mentionedCharacter = findMentionedCharacter(recent, npcPool);
-        String conversation = ContextWindowPolicy.toPromptContext(allMessages, recentCount);
+        // 只追加的剧情上下文：纪元内每轮只是在末尾追加新消息，前缀缓存才可能命中。
+        String conversation = ContextWindowPolicy.toHistoryContext(allMessages, recentCount);
 
         // 剧本级对话规则：每轮回复上限与扮演要求；最近发言者用于抑制"轮流表态"。
         int maxResponders = world == null ? WorldSetting.DEFAULT_MAX_RESPONDERS
@@ -135,9 +165,15 @@ public final class AiTurnOrchestrator {
 
         AiContext context = new AiContext(scriptId, world, npcPool, identity, playerCharacter,
                 conversation, language, 8, mentionedCharacter, mode == AiRequest.Mode.AUTO_ADVANCE,
-                maxResponders, styleDirective, recentSpeakerNames);
+                mode == AiRequest.Mode.MOMENT_INTERACTION, maxResponders, styleDirective, recentSpeakerNames);
 
-        List<PromptMessage> messages = PromptAssembler.buildMessages(context, requestId);
+        // 朋友圈上下文属于「本轮才看得到」的信息，必须和其它逐轮变化的内容一起排在最后一条；
+        // 一旦插到剧情上下文之前，每轮变化的朋友圈就会把整段对话一起踢出缓存。
+        String socialContext = momentRepository == null ? "" : momentRepository.buildPromptContext(scriptId);
+        // 用户最新输入/旁白追加在本轮指令末尾，优先级高于历史上下文和朋友圈摘要。
+        String authoritative = PromptAssembler.buildAuthoritativeUserDirective(allMessages);
+        if (!authoritative.isEmpty()) socialContext = socialContext + "\n" + authoritative;
+        List<PromptMessage> messages = PromptAssembler.buildMessages(context, socialContext);
         com.example.roleplaychat.domain.model.ApiConfig config = settingsRepository.getApiConfig();
         AiRequest request = new AiRequest(requestId, scriptId, mode, round, messages,
                 config.getModel(), config.getMaxTokens(), config.getTemperature(),
@@ -167,7 +203,7 @@ public final class AiTurnOrchestrator {
                     return;
                 }
                 handleComplete(requestId, scriptId, mode, recent, npcPool, mentionedCharacter,
-                        maxResponders, fullText, callback);
+                        maxResponders, fullText, session, callback);
             }
 
             @Override
@@ -206,10 +242,12 @@ public final class AiTurnOrchestrator {
         ActiveRequest session;
         synchronized (requestLock) {
             session = activeRequests.get(scriptId);
-            if (session == null || (expectedRequestId != null
-                    && !expectedRequestId.equals(session.requestId))) {
+            if (expectedRequestId != null && (session == null
+                    || !expectedRequestId.equals(session.requestId))) {
                 return;
             }
+            requestEpochs.put(scriptId, requestEpochs.getOrDefault(scriptId, 0L) + 1L);
+            if (session == null) return;
             activeRequests.remove(scriptId);
         }
         if (session != null && session.request != null) {
@@ -240,9 +278,9 @@ public final class AiTurnOrchestrator {
     }
 
     private void handleComplete(String requestId, String scriptId, AiRequest.Mode mode,
-                                List<ChatMessage> recent, List<CharacterProfile> npcPool,
-                                @Nullable CharacterProfile mentionedCharacter, int maxResponders,
-                                String fullText, Callback callback) {
+                                 List<ChatMessage> recent, List<CharacterProfile> npcPool,
+                                 @Nullable CharacterProfile mentionedCharacter, int maxResponders,
+                                 String fullText, ActiveRequest session, Callback callback) {
         try {
             AiBatch batch = StructuredOutputParser.parse(fullText, requestId, scriptId);
             batch = AiOutputValidator.normalizeCharacterReferences(batch, npcPool);
@@ -258,31 +296,53 @@ public final class AiTurnOrchestrator {
                         targetTurnAdded = true;
                     }
                 }
-                batch = new AiBatch(batch.getRequestId(), batch.getScriptId(), targeted, false);
+                batch = new AiBatch(batch.getRequestId(), batch.getScriptId(), targeted, false,
+                        batch.shouldAwaitPlayer(), batch.getMomentActions(), batch.getImageActions());
             } else {
                 // 不 @ 时执行人数上限硬约束（@ 提及的路径优先级更高，已保证单人）。
                 batch = AiOutputValidator.capResponders(batch, maxResponders);
             }
             Set<String> enabledIds = AiOutputValidator.idsOf(npcPool);
             AiBatch validated = AiOutputValidator.validate(batch, enabledIds);
-            boolean hadValidEvents = !validated.isEmpty();
+            boolean hadValidOutput = !validated.isEmpty() || !validated.getMomentActions().isEmpty();
             // 无论普通回复还是自动续演，都不能把上一轮相同内容再次写入历史。
             validated = AiResponseDeduplicator.removeNearDuplicates(validated, recent);
             if (validated.isEmpty()) {
                 // 重复输出不能降级为原文，否则会把复读再次写入历史。
-                if (hadValidEvents) {
+                if (hadValidOutput) {
                     callback.onBatchCommitted(requestId, validated);
                 } else if (mode != AiRequest.Mode.AUTO_ADVANCE) {
-                    insertFallbackText(requestId, scriptId, npcPool, mentionedCharacter, fullText, callback);
+                    insertFallbackText(requestId, scriptId, npcPool, mentionedCharacter, fullText, session, callback);
                 } else {
                     callback.onBatchCommitted(requestId, validated);
                 }
                 return;
             }
-            chatRepository.insertAiBatch(scriptId, validated, System.currentTimeMillis());
+            if (!commitIfNotDiscarded(scriptId, session, validated, enabledIds, requestId)) {
+                callback.onGenerationFailed(requestId, AppErrorCode.CANCELLED_BY_USER);
+                return;
+            }
             callback.onBatchCommitted(requestId, validated);
         } catch (StructuredOutputParser.OutputInvalidException e) {
-            insertFallbackText(requestId, scriptId, npcPool, mentionedCharacter, fullText, callback);
+            insertFallbackText(requestId, scriptId, npcPool, mentionedCharacter, fullText, session, callback);
+        }
+    }
+
+    /** 与 stop() 使用同一把锁，把“停止”和“批次落库”线性化，避免清空后迟到写入。 */
+    private boolean commitIfNotDiscarded(String scriptId, ActiveRequest session, AiBatch batch,
+                                         Set<String> enabledIds, String requestId) {
+        synchronized (requestLock) {
+            if (requestEpochs.getOrDefault(scriptId, 0L) != session.epoch) return false;
+            long now = System.currentTimeMillis();
+            chatRepository.insertAiBatch(scriptId, batch, now);
+            if (momentRepository != null && !batch.getMomentActions().isEmpty()) {
+                momentRepository.applyAiActions(scriptId, batch.getMomentActions(), enabledIds,
+                        chatRepository.maxSequence(scriptId), requestId, now);
+            }
+            if (imageGenerationScheduler != null && !batch.getImageActions().isEmpty()) {
+                imageGenerationScheduler.enqueue(scriptId, batch.getImageActions(), requestId, now);
+            }
+            return true;
         }
     }
 
@@ -290,6 +350,7 @@ public final class AiTurnOrchestrator {
                                     List<CharacterProfile> npcPool,
                                     @Nullable CharacterProfile mentionedCharacter,
                                     String fullText,
+                                    ActiveRequest session,
                                     Callback callback) {
         String text = StructuredOutputParser.fallbackText(fullText);
         if (text.isEmpty()) {
@@ -297,14 +358,20 @@ public final class AiTurnOrchestrator {
             callback.onGenerationFailed(requestId, AppErrorCode.OUTPUT_INVALID);
             return;
         }
+        // 结构化输出失败时不能把未知台词强行归给列表第一个角色。
         String characterId = mentionedCharacter != null ? mentionedCharacter.getId()
-                : (npcPool.isEmpty() ? null : npcPool.get(0).getId());
+                : (npcPool.size() == 1 ? npcPool.get(0).getId() : null);
+        AiEvent.Type fallbackType = characterId == null ? AiEvent.Type.NARRATION : AiEvent.Type.CHARACTER_TURN;
         AiEvent event = new AiEvent(
-                idGenerator.newRequestId(), AiEvent.Type.CHARACTER_TURN,
+                idGenerator.newRequestId(), fallbackType,
                 characterId, text, 0);
         AiBatch fallback = new AiBatch(requestId, scriptId,
                 java.util.Collections.singletonList(event), false);
-        chatRepository.insertAiBatch(scriptId, fallback, System.currentTimeMillis());
+        if (!commitIfNotDiscarded(scriptId, session, fallback,
+                AiOutputValidator.idsOf(npcPool), requestId)) {
+            callback.onGenerationFailed(requestId, AppErrorCode.CANCELLED_BY_USER);
+            return;
+        }
         callback.onBatchCommitted(requestId, fallback);
     }
 

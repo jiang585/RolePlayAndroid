@@ -18,7 +18,9 @@ import com.example.roleplaychat.R;
 import com.example.roleplaychat.RolePlayChatApp;
 import com.example.roleplaychat.domain.model.Appearance;
 import com.example.roleplaychat.domain.model.ChatMessage;
+import com.example.roleplaychat.domain.model.MessageAttachment;
 import com.example.roleplaychat.util.JsonUtils;
+import com.example.roleplaychat.ui.common.BubbleStyleDrawable;
 
 import java.io.File;
 import java.util.List;
@@ -34,6 +36,10 @@ public class ChatMessageAdapter extends ListAdapter<ChatListItem, RecyclerView.V
         void onAvatarLongClick(String displayName);
     }
 
+    public interface AvatarClickListener {
+        void onAvatarClick(ChatMessage message);
+    }
+
     private static final int TYPE_MINE = 0;
     private static final int TYPE_THEIRS = 1;
     private static final int TYPE_NARRATION = 2;
@@ -42,14 +48,24 @@ public class ChatMessageAdapter extends ListAdapter<ChatListItem, RecyclerView.V
 
     private Appearance appearance;
     private final AvatarLongClickListener avatarLongClickListener;
+    private final AvatarClickListener avatarClickListener;
 
-    public ChatMessageAdapter(AvatarLongClickListener avatarLongClickListener) {
+    public ChatMessageAdapter(AvatarClickListener avatarClickListener,
+                              AvatarLongClickListener avatarLongClickListener) {
         super(DIFF);
+        this.avatarClickListener = avatarClickListener;
         this.avatarLongClickListener = avatarLongClickListener;
     }
 
     public void setAppearance(@Nullable Appearance appearance) {
+        if (java.util.Objects.equals(this.appearance, appearance)) {
+            return;
+        }
         this.appearance = appearance;
+        // 外观不是 DiffUtil 的消息内容；显式重绑可立即刷新已显示项目。
+        if (getItemCount() > 0) {
+            notifyItemRangeChanged(0, getItemCount());
+        }
     }
 
     private static final DiffUtil.ItemCallback<ChatListItem> DIFF =
@@ -132,17 +148,12 @@ public class ChatMessageAdapter extends ListAdapter<ChatListItem, RecyclerView.V
     private void bindMine(MineViewHolder holder, ChatMessage message) {
         holder.nickname.setText(message.getSenderDisplayName() == null ? "" : message.getSenderDisplayName());
         holder.content.setText(message.getContent());
-        if (appearance != null) {
-            holder.content.setTextColor(parseColor(appearance.getTextColor(),
-                    holder.content.getContext().getColor(R.color.s9_my_text)));
-            // 气泡底色保留 drawable 设计色；用户自定义 bubbleColor 时覆盖
-            if (appearance.getBubbleColor() != null
-                    && !"#FFB8E6C1".equalsIgnoreCase(appearance.getBubbleColor())
-                    && !"#FF95EC69".equalsIgnoreCase(appearance.getBubbleColor())) {
-                holder.content.setBackgroundColor(parseColor(appearance.getBubbleColor(),
-                        holder.content.getContext().getColor(R.color.s9_my_bubble)));
-            }
-        }
+        bindAttachment(holder.attachment, message);
+        holder.content.setTextColor(parseColor(appearance == null ? null : appearance.getTextColor(),
+                holder.content.getContext().getColor(R.color.s9_my_text)));
+        holder.content.setBackground(BubbleStyleDrawable.create(holder.content.getContext(), bubbleStyleId(),
+                parseColor(appearance == null ? null : appearance.getBubbleColor(),
+                        holder.content.getContext().getColor(R.color.s9_my_bubble)), true));
         loadAvatar(holder.avatar, message.getSenderAvatarRef());
         bindAvatarLongClick(holder.avatar, message);
     }
@@ -150,28 +161,23 @@ public class ChatMessageAdapter extends ListAdapter<ChatListItem, RecyclerView.V
     private void bindTheirs(TheirsViewHolder holder, ChatMessage message) {
         holder.nickname.setText(TextUtils.isEmpty(message.getSenderDisplayName())
                 ? "未知角色" : message.getSenderDisplayName());
-        if (appearance != null) {
-            holder.nickname.setTextColor(parseColor(appearance.getNicknameColor(),
-                    holder.nickname.getContext().getColor(R.color.s9_npc_name)));
-            // NPC 气泡底色保留 drawable 设计色（米白+边框）；仅自定义色时覆盖
-            if (appearance.getBubbleColor() != null
-                    && !"#FFB8E6C1".equalsIgnoreCase(appearance.getBubbleColor())
-                    && !"#FF95EC69".equalsIgnoreCase(appearance.getBubbleColor())) {
-                holder.content.setBackgroundColor(parseColor(appearance.getBubbleColor(),
-                        holder.content.getContext().getColor(R.color.s9_npc_bubble)));
-            }
-            holder.content.setTextColor(parseColor(appearance.getTextColor(),
-                    holder.content.getContext().getColor(R.color.s9_npc_text)));
-        } else {
-            holder.content.setBackgroundColor(holder.content.getContext()
-                    .getColor(R.color.s9_npc_bubble));
-        }
+        holder.nickname.setTextColor(parseColor(appearance == null ? null : appearance.getNicknameColor(),
+                holder.nickname.getContext().getColor(R.color.s9_npc_name)));
+        holder.content.setTextColor(parseColor(appearance == null ? null : appearance.getTextColor(),
+                holder.content.getContext().getColor(R.color.s9_npc_text)));
+        holder.content.setBackground(BubbleStyleDrawable.create(holder.content.getContext(), bubbleStyleId(),
+                parseColor(appearance == null ? null : appearance.getBubbleColor(),
+                        holder.content.getContext().getColor(R.color.s9_npc_bubble)), false));
         holder.content.setText(message.getContent());
+        bindAttachment(holder.attachment, message);
         loadAvatar(holder.avatar, message.getSenderAvatarRef());
         bindAvatarLongClick(holder.avatar, message);
     }
 
     private void bindAvatarLongClick(ImageView avatar, ChatMessage message) {
+        avatar.setOnClickListener(v -> {
+            if (avatarClickListener != null) avatarClickListener.onAvatarClick(message);
+        });
         avatar.setOnLongClickListener(v -> {
             if (avatarLongClickListener == null || TextUtils.isEmpty(message.getSenderDisplayName())) {
                 return false;
@@ -179,6 +185,31 @@ public class ChatMessageAdapter extends ListAdapter<ChatListItem, RecyclerView.V
             avatarLongClickListener.onAvatarLongClick(message.getSenderDisplayName());
             return true;
         });
+    }
+
+    private void bindAttachment(ImageView imageView, ChatMessage message) {
+        MessageAttachment ready = null;
+        for (MessageAttachment attachment : message.getAttachments()) {
+            if (attachment.isReady()) { ready = attachment; break; }
+        }
+        if (ready == null) {
+            imageView.setVisibility(View.GONE);
+            imageView.setImageDrawable(null);
+            return;
+        }
+        File file = ((RolePlayChatApp) imageView.getContext().getApplicationContext())
+                .container().assetStore.resolve(ready.getLocalPath());
+        if (file == null) {
+            imageView.setVisibility(View.GONE);
+            return;
+        }
+        imageView.setVisibility(View.VISIBLE);
+        Glide.with(imageView.getContext()).load(file).into(imageView);
+    }
+
+    private String bubbleStyleId() {
+        return appearance == null || appearance.getBubbleStyleId() == null
+                ? "rounded_tail_v1" : appearance.getBubbleStyleId();
     }
 
     private void bindNarration(NarrationViewHolder holder, ChatMessage message) {
@@ -224,12 +255,14 @@ public class ChatMessageAdapter extends ListAdapter<ChatListItem, RecyclerView.V
         final TextView content;
         final TextView nickname;
         final ImageView avatar;
+        final ImageView attachment;
 
         MineViewHolder(@NonNull View itemView) {
             super(itemView);
             content = itemView.findViewById(R.id.tv_message_content);
             nickname = itemView.findViewById(R.id.tv_nickname);
             avatar = itemView.findViewById(R.id.iv_avatar);
+            attachment = itemView.findViewById(R.id.iv_message_attachment);
         }
     }
 
@@ -237,12 +270,14 @@ public class ChatMessageAdapter extends ListAdapter<ChatListItem, RecyclerView.V
         final TextView nickname;
         final TextView content;
         final ImageView avatar;
+        final ImageView attachment;
 
         TheirsViewHolder(@NonNull View itemView) {
             super(itemView);
             nickname = itemView.findViewById(R.id.tv_nickname);
             content = itemView.findViewById(R.id.tv_message_content);
             avatar = itemView.findViewById(R.id.iv_avatar);
+            attachment = itemView.findViewById(R.id.iv_message_attachment);
         }
     }
 

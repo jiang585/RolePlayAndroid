@@ -271,34 +271,70 @@
             android:text="@string/settings_test_connection"
             style="@style/Widget.RolePlayChat.Button.Quiet" />
 
-        <!-- 卡片4：数据维护 -->
+        <!-- Huajing 局域网配对 -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/section_gap"
+            android:layout_marginTop="@dimen/space_l"
             style="@style/Widget.RolePlayChat.Card">
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:padding="@dimen/space_l">
-
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/settings_data"
+                    android:text="Huajing 局域网生图"
                     android:textSize="15sp"
                     android:textStyle="bold"
                     android:textColor="@color/text_primary" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_clear_chat"
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="首次输入电脑端地址和配对码，之后会长期保持配对。"
+                    android:textColor="@color/text_secondary" />
+                <EditText
+                    android:id="@+id/input_huajing_url"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_m"
-                    android:text="@string/settings_clear_chat"
-                    style="@style/Widget.RolePlayChat.Button.Quiet" />
+                    android:background="@drawable/bg_input_field"
+                    android:hint="例如 http://192.168.1.10:17890/"
+                    android:inputType="textUri"
+                    android:padding="12dp" />
+                <EditText
+                    android:id="@+id/input_huajing_code"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_s"
+                    android:background="@drawable/bg_input_field"
+                    android:hint="6 位配对码"
+                    android:inputType="number"
+                    android:maxLength="6"
+                    android:padding="12dp" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_s"
+                    android:orientation="horizontal">
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_pair_huajing"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="配对"
+                        style="@style/Widget.RolePlayChat.Button" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_clear_huajing"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/space_s"
+                        android:layout_weight="1"
+                        android:text="解除配对"
+                        style="@style/Widget.RolePlayChat.Button.Quiet" />
+                </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 

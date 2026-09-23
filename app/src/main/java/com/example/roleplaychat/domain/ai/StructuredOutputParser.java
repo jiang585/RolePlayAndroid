@@ -4,6 +4,8 @@ import androidx.annotation.Nullable;
 
 import com.example.roleplaychat.domain.model.AiBatch;
 import com.example.roleplaychat.domain.model.AiEvent;
+import com.example.roleplaychat.domain.model.AiMomentAction;
+import com.example.roleplaychat.domain.model.AiImageAction;
 import com.example.roleplaychat.util.JsonUtils;
 import com.google.gson.JsonSyntaxException;
 
@@ -56,12 +58,15 @@ public final class StructuredOutputParser {
         // request_id is client-side correlation metadata. Older prompts asked the model to
         // echo it, but that made an otherwise valid response fail when the model omitted it.
         // The parsed batch always uses the trusted local requestId below.
-        if (root.events == null || root.events.isEmpty()) {
-            throw new OutputInvalidException("empty events");
+        if ((root.events == null || root.events.isEmpty())
+                && (root.moments == null || root.moments.isEmpty())
+                && (root.imageActions == null || root.imageActions.isEmpty())) {
+            throw new OutputInvalidException("empty events and moments");
         }
         List<AiEvent> events = new ArrayList<>();
         int index = 0;
-        for (StructuredOutput.Event event : root.events) {
+        for (StructuredOutput.Event event : root.events == null
+                ? java.util.Collections.<StructuredOutput.Event>emptyList() : root.events) {
             if (event == null || event.content == null || event.content.trim().isEmpty()) {
                 continue; // 空事件丢弃（§8.4）
             }
@@ -78,7 +83,38 @@ public final class StructuredOutputParser {
                     event.content.trim(),
                     index++));
         }
-        return new AiBatch(requestId, scriptId, events, root.continueScene);
+        List<AiMomentAction> actions = new ArrayList<>();
+        if (root.moments != null) {
+            for (StructuredOutput.MomentAction action : root.moments) {
+                if (action == null || action.characterId == null || action.content == null
+                        || action.content.trim().isEmpty()) continue;
+                AiMomentAction.Type type = "post".equals(action.type) ? AiMomentAction.Type.POST
+                        : "comment".equals(action.type) ? AiMomentAction.Type.COMMENT : null;
+                if (type != null) actions.add(new AiMomentAction(type, action.characterId.trim(),
+                        action.content.trim(), action.momentId, action.parentCommentId));
+            }
+        }
+        List<AiImageAction> imageActions = new ArrayList<>();
+        if (root.imageActions != null) {
+            int imageIndex = 0;
+            for (StructuredOutput.ImageAction action : root.imageActions) {
+                if (action == null || action.characterId == null || action.scene == null
+                        || action.characterId.trim().isEmpty() || action.scene.trim().isEmpty()) continue;
+                AiImageAction.Intent intent = parseImageIntent(action.intent);
+                AiImageAction.Trigger trigger = parseImageTrigger(action.trigger);
+                if (intent == null || trigger == null) continue;
+                String actionId = action.actionId == null || action.actionId.trim().isEmpty()
+                        ? requestId + ":img-" + imageIndex : action.actionId.trim();
+                String messageId = trimNullable(action.messageId);
+                if (messageId != null && !messageId.startsWith(requestId + ":")) {
+                    messageId = requestId + ":" + messageId;
+                }
+                imageActions.add(new AiImageAction(actionId, messageId, action.characterId.trim(), intent, trigger,
+                        action.scene.trim(), trimNullable(action.framing), trimNullable(action.mood), trimNullable(action.outfit)));
+                imageIndex++;
+            }
+        }
+        return new AiBatch(requestId, scriptId, events, root.continueScene, root.awaitPlayer, actions, imageActions);
     }
 
     /** 从原始文本中提取 JSON（兼容 Markdown 包裹，架构文档 §15.2-6）。 */
@@ -134,6 +170,34 @@ public final class StructuredOutputParser {
 
     private static String limit(String text) {
         return text.length() > 4096 ? text.substring(0, 4096) : text;
+    }
+
+    private static String trimNullable(String value) {
+        return value == null || value.trim().isEmpty() ? null : value.trim();
+    }
+
+    @Nullable
+    private static AiImageAction.Intent parseImageIntent(String value) {
+        if (value == null) return null;
+        switch (value.toUpperCase(java.util.Locale.ROOT)) {
+            case "SELFIE": return AiImageAction.Intent.SELFIE;
+            case "SCENE_SHARE": return AiImageAction.Intent.SCENE_SHARE;
+            case "OUTFIT_SHOW": return AiImageAction.Intent.OUTFIT_SHOW;
+            case "PHOTO_SHARE": return AiImageAction.Intent.PHOTO_SHARE;
+            default: return null;
+        }
+    }
+
+    @Nullable
+    private static AiImageAction.Trigger parseImageTrigger(String value) {
+        if (value == null) return AiImageAction.Trigger.EXPLICIT_USER_REQUEST;
+        switch (value.toUpperCase(java.util.Locale.ROOT)) {
+            case "EXPLICIT_USER_REQUEST": return AiImageAction.Trigger.EXPLICIT_USER_REQUEST;
+            case "SPONTANEOUS_CHARACTER_SHARE": return AiImageAction.Trigger.SPONTANEOUS_CHARACTER_SHARE;
+            case "SYSTEM_DETECTED_INTENT": return AiImageAction.Trigger.SYSTEM_DETECTED_INTENT;
+            case "MANUAL_USER_REQUEST": return AiImageAction.Trigger.MANUAL_USER_REQUEST;
+            default: return null;
+        }
     }
 
     @Nullable

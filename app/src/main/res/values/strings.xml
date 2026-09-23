@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="generated_image">生成的图片</string>
+    <string name="chat_send_character_image">让角色发一张照片</string>
     <string name="app_name">满座</string>
 
     <!-- 通用 -->
@@ -56,6 +58,8 @@
     <string name="script_detail_export">导出数据</string>
     <string name="script_detail_no_world">尚未设置世界观，点击完善</string>
     <string name="script_detail_no_characters">还没有角色，点击添加</string>
+    <string name="script_detail_tools">剧本工具</string>
+    <string name="script_export_title">导出本剧本</string>
 
     <!-- 世界观 -->
     <string name="world_edit_title">世界观设定</string>
@@ -74,9 +78,36 @@
     <string name="world_saved">世界观已保存</string>
     <string name="world_ai_done">AI 已生成设定草稿，请检查后保存</string>
 
+    <!-- AI 一句话生成设定 -->
+    <string name="ai_setup_nav_title">AI 生成设定</string>
+    <string name="ai_setup_title_world">一句话创建世界与人物</string>
+    <string name="ai_setup_title_characters">一句话添加人物</string>
+    <string name="ai_setup_intro">写下一句话，AI 会先补全世界观，再按它生成彼此有关系的人物。</string>
+    <string name="ai_setup_description_hint">例如：雨夜的民国租界，表面繁华，暗地里各方势力都在找一份失踪档案</string>
+    <string name="ai_setup_count_label">本次生成数量</string>
+    <string name="ai_setup_count_entry">生成 %1$d 人</string>
+    <string name="ai_setup_generate_world">生成世界观与人物草稿</string>
+    <string name="ai_setup_generate_characters">生成新人物草稿</string>
+    <string name="ai_setup_empty_description">请先写下一句话设定</string>
+    <string name="ai_setup_saved">已保存 AI 生成的设定和人物</string>
+    <string name="ai_setup_preview_title">生成预览</string>
+    <string name="ai_setup_preview_confirm">确认保存</string>
+    <string name="ai_setup_preview_world">世界观</string>
+    <string name="ai_setup_preview_world_summary">%1$s · %2$s</string>
+    <string name="ai_setup_preview_factions">势力：%1$s</string>
+    <string name="ai_setup_preview_rules">规则：%1$s</string>
+    <string name="ai_setup_preview_opening">开场：%1$s</string>
+    <string name="ai_setup_preview_characters">人物（%1$d）</string>
+    <string name="ai_setup_preview_character_line">• %1$s · %2$s</string>
+    <string name="ai_setup_preview_personality">性格：%1$s</string>
+    <string name="ai_setup_preview_goal">目标：%1$s</string>
+    <string name="ai_setup_preview_secret">秘密：%1$s</string>
+    <string name="ai_setup_preview_relationship">关系：%1$s</string>
+
     <!-- 角色 -->
     <string name="character_list_title">角色成员</string>
     <string name="character_list_empty">还没有角色，点击右下角添加</string>
+    <string name="character_ai_setup">AI 添加人物</string>
     <string name="character_create">新建角色</string>
     <string name="character_import_title">导入角色卡</string>
     <string name="character_name">姓名</string>
@@ -153,6 +184,7 @@
     <string name="chat_member_dialog_title">群成员（%1$d）</string>
     <string name="chat_member_count">%1$d位成员</string>
     <string name="chat_clear_confirm">清空本群全部聊天记录？</string>
+    <string name="chat_clear_history">清空本剧本聊天记录</string>
     <string name="chat_rules">对话设定</string>
     <string name="chat_rules_title">对话设定</string>
     <string name="chat_rules_directive">扮演要求（每次回复都必须遵守）</string>
@@ -178,6 +210,30 @@
     <string name="appearance_scope_script">本剧本</string>
     <string name="appearance_scope_character">角色「%1$s」</string>
     <string name="appearance_character_override">角色专属气泡</string>
+
+    <!-- 朋友圈 -->
+    <string name="moments_title">朋友圈</string>
+    <string name="moments_subtitle">角色会在合适的剧情节点分享近况</string>
+    <string name="moments_profile_subtitle">%1$s 的朋友圈 · 可查看好友动态</string>
+    <string name="moments_post">发朋友圈</string>
+    <string name="moments_publish">发布</string>
+    <string name="moments_post_hint">这一刻，你想分享什么？</string>
+    <string name="moments_comments">评论</string>
+    <string name="moments_comments_title">动态详情</string>
+    <string name="moments_reply_comment_title">回复 %1$s</string>
+    <string name="moments_comment_hint">写下评论…</string>
+    <string name="moments_reply_hint">回复 %1$s…</string>
+    <string name="moments_post_empty">先写点内容再发布吧</string>
+    <string name="moments_comment_empty">先写点内容再评论吧</string>
+    <string name="moments_comment_line">%1$s：%2$s</string>
+    <string name="moments_comment_reply_line">%1$s 回复：%2$s</string>
+    <string name="moments_comment_reply_to_line">%1$s 回复 %2$s：%3$s</string>
+    <string name="moments_comment_author_reply_to">%1$s 回复 %2$s</string>
+    <string name="moments_time_just_now">刚刚</string>
+    <string name="moments_time_minutes">%1$d 分钟前</string>
+    <string name="moments_time_hours">%1$d 小时前</string>
+    <string name="moments_time_date">M月d日</string>
+    <string name="moments_me">我</string>
 
     <!-- 设置 -->
     <string name="settings_title">设置</string>

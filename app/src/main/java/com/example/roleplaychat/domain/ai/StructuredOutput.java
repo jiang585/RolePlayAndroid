@@ -22,6 +22,12 @@ public final class StructuredOutput {
         public List<Event> events = new ArrayList<>();
         @SerializedName("continue_scene")
         public boolean continueScene;
+        @SerializedName("await_player")
+        public boolean awaitPlayer;
+        @SerializedName("moments")
+        public List<MomentAction> moments = new ArrayList<>();
+        @SerializedName("image_actions")
+        public List<ImageAction> imageActions = new ArrayList<>();
     }
 
     public static final class Event {
@@ -33,5 +39,25 @@ public final class StructuredOutput {
         public String characterId;
         @SerializedName("content")
         public String content;
+    }
+
+    public static final class MomentAction {
+        @SerializedName("type") public String type; // post | comment
+        @SerializedName("character_id") public String characterId;
+        @SerializedName("content") public String content;
+        @SerializedName("moment_id") public String momentId;
+        @SerializedName("parent_comment_id") public String parentCommentId;
+    }
+
+    public static final class ImageAction {
+        @SerializedName("action_id") public String actionId;
+        @SerializedName("message_id") public String messageId;
+        @SerializedName("character_id") public String characterId;
+        @SerializedName("intent") public String intent;
+        @SerializedName("trigger") public String trigger;
+        @SerializedName("scene") public String scene;
+        @SerializedName("framing") public String framing;
+        @SerializedName("mood") public String mood;
+        @SerializedName("outfit") public String outfit;
     }
 }

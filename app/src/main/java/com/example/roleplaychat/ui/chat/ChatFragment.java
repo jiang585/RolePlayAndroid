@@ -2,7 +2,6 @@ package com.example.roleplaychat.ui.chat;
 
 import android.animation.ObjectAnimator;
 import android.animation.TimeInterpolator;
-import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -22,22 +21,18 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.roleplaychat.R;
 import com.example.roleplaychat.RolePlayChatApp;
-import com.example.roleplaychat.data.file.LocalAssetStore;
 import com.example.roleplaychat.di.ViewModelFactory;
 import com.example.roleplaychat.domain.model.Appearance;
 import com.example.roleplaychat.domain.model.CharacterProfile;
 import com.example.roleplaychat.domain.model.PlayerIdentity;
 import com.example.roleplaychat.domain.model.Script;
-import com.example.roleplaychat.domain.model.AppError;
-import com.example.roleplaychat.domain.usecase.ExportDataUseCase;
+import com.example.roleplaychat.domain.model.ChatMessage;
 import com.example.roleplaychat.ui.common.SingleEvent;
-import com.example.roleplaychat.ui.common.FilePickerHelper;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.ArrayList;
-import java.io.File;
 import java.util.List;
 
 /**
@@ -178,56 +173,17 @@ public class ChatFragment extends Fragment {
         } else if (id == R.id.menu_chat_rules) {
             navigateToChatRules();
             return true;
-        } else if (id == R.id.menu_chat_export) {
-            chooseChatExportFormat();
+        } else if (id == R.id.menu_chat_moments) {
+            openMoments(null);
+            return true;
+        } else if (id == R.id.menu_chat_send_image) {
+            showCharacterImageDialog();
             return true;
         } else if (id == R.id.menu_chat_clear) {
             confirmClearChat();
             return true;
         }
         return false;
-    }
-
-    private void chooseChatExportFormat() {
-        String[] formats = {getString(R.string.chat_export_json), getString(R.string.chat_export_txt),
-                getString(R.string.chat_export_pdf)};
-        new MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.chat_export)
-                .setItems(formats, (dialog, which) -> exportChat(which == 0
-                        ? ExportDataUseCase.ExportType.CHAT_JSON
-                        : which == 1 ? ExportDataUseCase.ExportType.CHAT_TXT
-                        : ExportDataUseCase.ExportType.CHAT_PDF))
-                .show();
-    }
-
-    /** 在后台生成聊天记录，并交给系统分享。 */
-    private void exportChat(ExportDataUseCase.ExportType type) {
-        RolePlayChatApp app = (RolePlayChatApp) requireActivity().getApplication();
-        app.container().executors.diskIO().execute(() -> {
-            LocalAssetStore assetStore = app.container().assetStore;
-            String extension = type == ExportDataUseCase.ExportType.CHAT_JSON ? ".json"
-                    : type == ExportDataUseCase.ExportType.CHAT_TXT ? ".txt" : ".pdf";
-            String mime = type == ExportDataUseCase.ExportType.CHAT_JSON ? "application/json"
-                    : type == ExportDataUseCase.ExportType.CHAT_TXT ? "text/plain" : "application/pdf";
-            File target = new File(assetStore.exportsDir(),
-                    "chat_" + System.currentTimeMillis() + extension);
-            AppError error = app.container().exportDataUseCase.execute(
-                    type, scriptId, null, target, false);
-            app.container().executors.mainThread().execute(() -> {
-                if (!isAdded() || getView() == null) {
-                    return;
-                }
-                if (error != null) {
-                    Toast.makeText(requireContext(),
-                            getString(R.string.import_export_export_failed, error.getMessage()),
-                            Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                Uri uri = androidx.core.content.FileProvider.getUriForFile(
-                        requireContext(), requireContext().getPackageName() + ".fileprovider", target);
-                FilePickerHelper.shareFile(requireActivity(), uri, mime);
-            });
-        });
     }
 
     private void showMembersDialog() {
@@ -252,6 +208,38 @@ public class ChatFragment extends Fragment {
         });
     }
 
+    private void showCharacterImageDialog() {
+        RolePlayChatApp app = (RolePlayChatApp) requireActivity().getApplication();
+        app.container().executors.diskIO().execute(() -> {
+            List<CharacterProfile> characters = app.container().characterRepository.getEnabledByScriptId(scriptId);
+            app.container().executors.mainThread().execute(() -> {
+                if (getView() == null || characters.isEmpty()) {
+                    Toast.makeText(requireContext(), "没有可用角色", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                String[] names = new String[characters.size()];
+                for (int i = 0; i < characters.size(); i++) names[i] = characters.get(i).getName();
+                EditText description = new EditText(requireContext());
+                description.setHint("描述照片内容（可留空）");
+                description.setSingleLine(false);
+                int padding = (int) (20 * getResources().getDisplayMetrics().density);
+                description.setPadding(padding, padding / 2, padding, padding / 2);
+                new MaterialAlertDialogBuilder(requireContext())
+                        .setTitle("选择发送照片的角色")
+                        .setSingleChoiceItems(names, 0, null)
+                        .setView(description)
+                        .setPositiveButton("发送", (dialog, which) -> {
+                            androidx.appcompat.app.AlertDialog alert = (androidx.appcompat.app.AlertDialog) dialog;
+                            int selected = alert.getListView().getCheckedItemPosition();
+                            if (selected < 0) selected = 0;
+                            viewModel.sendCharacterImage(characters.get(selected).getId(), description.getText().toString());
+                        })
+                        .setNegativeButton(R.string.action_cancel, null)
+                        .show();
+            });
+        });
+    }
+
     private void navigateToAppearance() {
         androidx.navigation.NavController navController =
                 androidx.navigation.Navigation.findNavController(requireView());
@@ -270,7 +258,7 @@ public class ChatFragment extends Fragment {
 
     private void confirmClearChat() {
         new MaterialAlertDialogBuilder(requireContext())
-                .setTitle(R.string.settings_clear_chat)
+                .setTitle(R.string.chat_clear_history)
                 .setMessage(R.string.chat_clear_confirm)
                 .setPositiveButton(R.string.action_confirm, (dialog, which) -> {
                     viewModel.clearChat();
@@ -284,7 +272,7 @@ public class ChatFragment extends Fragment {
         layoutManager = new LinearLayoutManager(requireContext());
         layoutManager.setStackFromEnd(true);
         recyclerView.setLayoutManager(layoutManager);
-        adapter = new ChatMessageAdapter(this::mentionCharacter);
+        adapter = new ChatMessageAdapter(this::openMoments, this::mentionCharacter);
         recyclerView.setAdapter(adapter);
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -340,6 +328,15 @@ public class ChatFragment extends Fragment {
         inputBox.requestFocus();
         inputBox.setSelection(inputBox.length());
         updateSendEnabled();
+    }
+
+    private void openMoments(@Nullable ChatMessage message) {
+        if (scriptId == null) return;
+        Bundle args = new Bundle();
+        args.putString("scriptId", scriptId);
+        args.putString("profileCharacterId", message == null ? null : message.getCharacterId());
+        androidx.navigation.Navigation.findNavController(requireView())
+                .navigate(R.id.action_chat_to_moments, args);
     }
 
     private void updateSendEnabled() {

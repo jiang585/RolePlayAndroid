@@ -3,12 +3,14 @@ package com.example.roleplaychat.data.mapper;
 import com.example.roleplaychat.data.local.entity.AppearanceEntity;
 import com.example.roleplaychat.data.local.entity.CharacterEntity;
 import com.example.roleplaychat.data.local.entity.MessageEntity;
+import com.example.roleplaychat.data.local.entity.MessageAttachmentEntity;
 import com.example.roleplaychat.data.local.entity.ScriptEntity;
 import com.example.roleplaychat.data.local.entity.SessionMemberEntity;
 import com.example.roleplaychat.data.local.entity.WorldSettingEntity;
 import com.example.roleplaychat.domain.model.Appearance;
 import com.example.roleplaychat.domain.model.CharacterProfile;
 import com.example.roleplaychat.domain.model.ChatMessage;
+import com.example.roleplaychat.domain.model.MessageAttachment;
 import com.example.roleplaychat.domain.model.PlayerIdentity;
 import com.example.roleplaychat.domain.model.Script;
 import com.example.roleplaychat.domain.model.WorldSetting;
@@ -37,12 +39,19 @@ public final class EntityMapper {
     // ---------- Script ----------
 
     public static Script toScript(ScriptEntity e) {
-        return new Script(e.id, e.name, e.one_line, e.cover_ref, e.created_at, e.updated_at, e.sort_index);
+        Script.MediaMode mode;
+        try {
+            mode = Script.MediaMode.valueOf(e.media_mode == null ? "TEXT_ONLY" : e.media_mode);
+        } catch (IllegalArgumentException ignored) {
+            mode = Script.MediaMode.TEXT_ONLY;
+        }
+        return new Script(e.id, e.name, e.one_line, e.cover_ref, e.created_at, e.updated_at,
+                e.sort_index, mode);
     }
 
     public static ScriptEntity toEntity(Script s) {
         return new ScriptEntity(s.getId(), s.getName(), s.getOneLine(), s.getCoverRef(),
-                s.getCreatedAt(), s.getUpdatedAt(), s.getSortIndex());
+                s.getCreatedAt(), s.getUpdatedAt(), s.getSortIndex(), s.getMediaMode().name());
     }
 
     // ---------- WorldSetting ----------
@@ -88,6 +97,10 @@ public final class EntityMapper {
     // ---------- Message ----------
 
     public static ChatMessage toMessage(MessageEntity e) {
+        return toMessage(e, java.util.Collections.emptyList());
+    }
+
+    public static ChatMessage toMessage(MessageEntity e, List<MessageAttachmentEntity> attachmentEntities) {
         ChatMessage.Builder b = ChatMessage.builder()
                 .id(e.id)
                 .scriptId(e.script_id)
@@ -107,6 +120,17 @@ public final class EntityMapper {
                 .turnIndex(e.turn_index)
                 .errorCode(e.error_code)
                 .metaJson(e.meta_json);
+        List<MessageAttachment> attachments = new ArrayList<>();
+        if (attachmentEntities != null) {
+            for (MessageAttachmentEntity a : attachmentEntities) {
+                MessageAttachment.Status status;
+                try { status = MessageAttachment.Status.valueOf(a.status); }
+                catch (IllegalArgumentException ex) { status = MessageAttachment.Status.FAILED; }
+                attachments.add(new MessageAttachment(a.id, a.message_id, a.character_id, a.type,
+                        status, a.local_path, a.mime_type, a.width, a.height, a.job_id));
+            }
+        }
+        b.attachments(attachments);
         return b.build();
     }
 

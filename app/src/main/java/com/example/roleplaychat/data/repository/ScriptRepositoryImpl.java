@@ -90,6 +90,12 @@ public class ScriptRepositoryImpl implements ScriptRepository {
     }
 
     @Override
+    public void setMediaMode(String scriptId, Script.MediaMode mediaMode, long now) {
+        db.runInTransaction(() -> dao.setMediaMode(scriptId,
+                mediaMode == null ? Script.MediaMode.TEXT_ONLY.name() : mediaMode.name(), now));
+    }
+
+    @Override
     public void deleteScript(String scriptId) {
         db.runInTransaction(() -> dao.deleteById(scriptId));
     }

@@ -3,6 +3,8 @@ package com.example.roleplaychat.domain.model;
 import androidx.annotation.Nullable;
 
 import java.util.Objects;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * 聊天消息领域模型（架构文档 §5.2）。不可变。
@@ -65,6 +67,7 @@ public final class ChatMessage {
     private final String errorCode;
     @Nullable
     private final String metaJson;
+    private final List<MessageAttachment> attachments;
 
     private ChatMessage(Builder b) {
         this.id = Objects.requireNonNull(b.id);
@@ -85,6 +88,8 @@ public final class ChatMessage {
         this.turnIndex = b.turnIndex;
         this.errorCode = b.errorCode;
         this.metaJson = b.metaJson;
+        this.attachments = b.attachments == null ? Collections.emptyList()
+                : Collections.unmodifiableList(new java.util.ArrayList<>(b.attachments));
     }
 
     public String getId() {
@@ -169,6 +174,8 @@ public final class ChatMessage {
         return metaJson;
     }
 
+    public List<MessageAttachment> getAttachments() { return attachments; }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -192,6 +199,7 @@ public final class ChatMessage {
         private Integer turnIndex;
         private String errorCode;
         private String metaJson;
+        private List<MessageAttachment> attachments;
 
         public Builder id(String v) {
             id = v;
@@ -282,6 +290,8 @@ public final class ChatMessage {
             metaJson = v;
             return this;
         }
+
+        public Builder attachments(List<MessageAttachment> v) { attachments = v; return this; }
 
         public ChatMessage build() {
             return new ChatMessage(this);

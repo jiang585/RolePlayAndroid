@@ -29,6 +29,9 @@ public interface ChatRepository {
     /** 插入玩家旁白（居中系统提示，无角色）。 */
     ChatMessage insertNarration(String scriptId, String content, long now);
 
+    /** 创建只承载图片附件的角色消息占位；文本为空，图片完成后仍保留在聊天记录。 */
+    ChatMessage insertImagePlaceholder(String scriptId, String characterId, long now);
+
     /** 事务写入 AI 事件批次，连续分配 sequence。 */
     void insertAiBatch(String scriptId, AiBatch batch, long now);
 

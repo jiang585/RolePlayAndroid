@@ -36,6 +36,16 @@
             android:lineSpacingExtra="3dp"
             android:textColor="@color/s9_my_text"
             android:textSize="@dimen/s9_message_size" />
+
+        <ImageView
+            android:id="@+id/iv_message_attachment"
+            android:layout_width="220dp"
+            android:layout_height="220dp"
+            android:layout_marginTop="6dp"
+            android:adjustViewBounds="true"
+            android:scaleType="centerCrop"
+            android:visibility="gone"
+            android:contentDescription="@string/generated_image" />
     </LinearLayout>
 
     <ImageView

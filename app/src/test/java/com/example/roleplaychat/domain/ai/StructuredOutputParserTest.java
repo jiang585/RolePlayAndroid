@@ -89,6 +89,30 @@ public class StructuredOutputParserTest {
     }
 
     @Test
+    public void parse_awaitPlayer_preventsAutomaticContinuation() throws Exception {
+        AiBatch batch = StructuredOutputParser.parse("{\"schema_version\":1,\"continue_scene\":true,\"await_player\":true,\"events\":[{\"type\":\"character_turn\",\"character_id\":\"char-1\",\"content\":\"你决定怎么做？\"}]}", REQUEST_ID, "script-1");
+        assertTrue(batch.shouldAwaitPlayer());
+        assertTrue(!batch.shouldContinueScene());
+    }
+
+    @Test
+    public void parse_imageAction_linksToMessageAndNormalizesEventId() throws Exception {
+        String raw = "{\"schema_version\":1,\"events\":[{\"event_id\":\"e1\",\"type\":\"character_turn\",\"character_id\":\"char-1\",\"content\":\"等等\"}],"
+                + "\"image_actions\":[{\"action_id\":\"img-1\",\"message_id\":\"e1\",\"character_id\":\"char-1\",\"intent\":\"SELFIE\",\"trigger\":\"SPONTANEOUS_CHARACTER_SHARE\",\"scene\":\"室内自拍\"}]}";
+        AiBatch batch = StructuredOutputParser.parse(raw, REQUEST_ID, "script-1");
+        assertEquals(1, batch.getImageActions().size());
+        assertEquals("req-123:e1", batch.getImageActions().get(0).getMessageId());
+    }
+
+    @Test
+    public void parse_imageActionsOnly_isAccepted() throws Exception {
+        AiBatch batch = StructuredOutputParser.parse(
+                "{\"schema_version\":1,\"events\":[],\"image_actions\":[{\"character_id\":\"c1\",\"intent\":\"SELFIE\",\"scene\":\"自拍\"}]}",
+                REQUEST_ID, "script-1");
+        assertEquals(1, batch.getImageActions().size());
+    }
+
+    @Test
     public void fallbackText_extractsContentFromMalformedJson() {
         String text = StructuredOutputParser.fallbackText(
                 "{\"events\":[{\"type\":\"character_turn\",\"content\":\"你好，先坐。\"}," );

@@ -24,10 +24,12 @@ public class ChatRepositoryImpl implements ChatRepository {
 
     private final AppDatabase db;
     private final MessageDao dao;
+    private final com.example.roleplaychat.data.local.dao.MessageAttachmentDao attachmentDao;
 
     public ChatRepositoryImpl(AppDatabase db) {
         this.db = db;
         this.dao = db.messageDao();
+        this.attachmentDao = db.messageAttachmentDao();
     }
 
     @Override
@@ -36,7 +38,7 @@ public class ChatRepositoryImpl implements ChatRepository {
             // 倒序读取，UI 需正序展示，因此这里反转为正序
             List<ChatMessage> result = new ArrayList<>(entities.size());
             for (int i = entities.size() - 1; i >= 0; i--) {
-                result.add(EntityMapper.toMessage(entities.get(i)));
+                result.add(toMessage(entities.get(i)));
             }
             return result;
         });
@@ -47,7 +49,7 @@ public class ChatRepositoryImpl implements ChatRepository {
         List<MessageEntity> entities = dao.loadBefore(scriptId, beforeSequence, limit);
         List<ChatMessage> result = new ArrayList<>(entities.size());
         for (int i = entities.size() - 1; i >= 0; i--) {
-            result.add(EntityMapper.toMessage(entities.get(i)));
+            result.add(toMessage(entities.get(i)));
         }
         return result;
     }
@@ -55,14 +57,14 @@ public class ChatRepositoryImpl implements ChatRepository {
     @Override
     public List<ChatMessage> loadAll(String scriptId) {
         return dao.loadAll(scriptId).stream()
-                .map(EntityMapper::toMessage)
+                .map(this::toMessage)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<ChatMessage> loadAfter(String scriptId, long afterSequence, int limit) {
         return dao.loadAfter(scriptId, afterSequence, limit).stream()
-                .map(EntityMapper::toMessage)
+                .map(this::toMessage)
                 .collect(Collectors.toList());
     }
 
@@ -118,6 +120,19 @@ public class ChatRepositoryImpl implements ChatRepository {
                 null);
         dao.insertPlayerMessageTx(entity);
         return EntityMapper.toMessage(entity);
+    }
+
+    @Override
+    public ChatMessage insertImagePlaceholder(String scriptId, String characterId, long now) {
+        String messageId = java.util.UUID.randomUUID().toString();
+        com.example.roleplaychat.data.local.entity.CharacterEntity character = db.characterDao().getById(characterId);
+        com.example.roleplaychat.domain.model.CharacterProfile profile = character == null ? null : EntityMapper.toProfile(character);
+        MessageEntity entity = new MessageEntity(messageId, scriptId, characterId,
+                profile == null ? null : profile.getName(), profile == null ? null : profile.getAvatarRef(),
+                null, null, ChatMessage.Type.CHARACTER_TEXT.name(), ChatMessage.Side.THEIRS.name(),
+                "", 0, now, ChatMessage.Status.DONE.name(), null, null, null, null, null);
+        dao.insertPlayerMessageTx(entity);
+        return toMessage(entity);
     }
 
     @Override
@@ -216,5 +231,9 @@ public class ChatRepositoryImpl implements ChatRepository {
     @Override
     public long maxSequence(String scriptId) {
         return dao.maxSequence(scriptId);
+    }
+
+    private ChatMessage toMessage(MessageEntity entity) {
+        return EntityMapper.toMessage(entity, attachmentDao.getForMessage(entity.id));
     }
 }
