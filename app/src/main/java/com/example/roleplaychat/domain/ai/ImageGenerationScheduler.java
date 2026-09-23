@@ -68,6 +68,10 @@ public final class ImageGenerationScheduler {
 
     private void enqueueOne(String scriptId, AiImageAction action, String requestId, long now) {
         // action 的 message_id 必须来自本批次事件，避免把图片错挂到旧消息上。
+        if (action.getTrigger() == AiImageAction.Trigger.SPONTANEOUS_CHARACTER_SHARE
+                && jobDao.countRecentSpontaneous(scriptId, action.getCharacterId(), now - 10 * 60 * 1000L) > 0) {
+            return;
+        }
         CharacterVisualProfile profile = visualRepository.getByCharacterId(action.getCharacterId());
         if (action.isIncludeCharacter() && (profile == null || !profile.isReady())) return;
         String jobId = idGenerator.newRequestId();

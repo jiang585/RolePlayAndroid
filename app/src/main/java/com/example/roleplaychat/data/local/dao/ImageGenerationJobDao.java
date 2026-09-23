@@ -29,4 +29,8 @@ public interface ImageGenerationJobDao {
 
     @Query("SELECT * FROM image_generation_jobs WHERE status IN ('CREATED','UPLOADING_REFERENCES','QUEUED','RUNNING','DOWNLOADING')")
     List<ImageGenerationJobEntity> getPending();
+
+    @Query("SELECT COUNT(*) FROM image_generation_jobs WHERE script_id = :scriptId AND character_id = :characterId "
+            + "AND trigger = 'SPONTANEOUS_CHARACTER_SHARE' AND created_at >= :since")
+    int countRecentSpontaneous(String scriptId, String characterId, long since);
 }
