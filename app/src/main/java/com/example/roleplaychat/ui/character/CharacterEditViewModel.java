@@ -19,6 +19,9 @@ import com.example.roleplaychat.domain.repository.SettingsRepository;
 import com.example.roleplaychat.domain.repository.CharacterRepository;
 import com.example.roleplaychat.domain.repository.CharacterVisualRepository;
 import com.example.roleplaychat.domain.repository.ScriptRepository;
+import com.example.roleplaychat.domain.repository.ImageGenerationGateway;
+import com.example.roleplaychat.domain.model.ImageGenerationRequest;
+import com.example.roleplaychat.domain.model.ImageGenerationStatus;
 import com.example.roleplaychat.domain.model.Script;
 import com.example.roleplaychat.domain.usecase.SaveCharacterUseCase;
 import com.example.roleplaychat.ui.common.SingleEvent;
@@ -42,6 +45,8 @@ public class CharacterEditViewModel extends ViewModel {
     private final CharacterVisualRepository visualRepository;
     private final ScriptRepository scriptRepository;
     private final LocalAssetStore assetStore;
+    private final ImageGenerationGateway imageGateway;
+    private final MutableLiveData<Boolean> visualGenerating = new MutableLiveData<>(false);
     private final MutableLiveData<CharacterVisualProfile> visualProfile = new MutableLiveData<>();
     private android.net.Uri pendingFaceUri;
     private String visualDescription;
@@ -64,7 +69,8 @@ public class CharacterEditViewModel extends ViewModel {
                                    com.example.roleplaychat.util.AppExecutors executors,
                                    CharacterVisualRepository visualRepository,
                                    ScriptRepository scriptRepository,
-                                   LocalAssetStore assetStore) {
+                                   LocalAssetStore assetStore,
+                                   ImageGenerationGateway imageGateway) {
         this.characterRepository = characterRepository;
         this.saveCharacterUseCase = saveCharacterUseCase;
         this.imageImporter = imageImporter;
@@ -74,6 +80,7 @@ public class CharacterEditViewModel extends ViewModel {
         this.visualRepository = visualRepository;
         this.scriptRepository = scriptRepository;
         this.assetStore = assetStore;
+        this.imageGateway = imageGateway;
     }
 
     public CharacterEditViewModel(CharacterRepository characterRepository,
@@ -82,13 +89,67 @@ public class CharacterEditViewModel extends ViewModel {
                                    SettingsRepository settingsRepository,
                                    com.example.roleplaychat.util.AppExecutors executors) {
         this(characterRepository, saveCharacterUseCase, imageImporter, aiRepository,
-                settingsRepository, executors, null, null, null);
+                settingsRepository, executors, null, null, null, null);
     }
 
     public LiveData<CharacterVisualProfile> getVisualProfile() { return visualProfile; }
+    public LiveData<Boolean> getVisualGenerating() { return visualGenerating; }
     public void setFaceUri(android.net.Uri uri) { pendingFaceUri = uri; }
     public void setVisualFields(String description, String height, String body) {
         visualDescription = description; heightText = height; bodyType = body;
+    }
+
+    /** 生成三张身份候选；首张先作为当前主图，用户可在视觉设定卡片中替换。 */
+    public void generateVisualCandidates(String prompt) {
+        if (editing == null || characterRepository.getById(editing.getId()) == null
+                || imageGateway == null || visualRepository == null || assetStore == null) {
+            events.postValue(new SingleEvent<>("error:save_before_visual"));
+            return;
+        }
+        visualGenerating.postValue(true);
+        executors.networkIO().execute(() -> {
+            try {
+                java.util.List<CharacterVisualAsset> assets = new java.util.ArrayList<>();
+                for (int i = 0; i < 3; i++) {
+                    String clientJob = "identity-" + editing.getId() + "-" + i + "-" + System.nanoTime();
+                    ImageGenerationRequest request = new ImageGenerationRequest(clientJob, editing.getScriptId(), editing.getId(),
+                            ImageGenerationRequest.Model.ZIMAGE, ImageGenerationRequest.Mode.TXT2IMG,
+                            "正面人物证件式肖像，" + (prompt == null ? "自然表情，清晰五官" : prompt.trim()), "",
+                            java.util.Collections.emptyList(), 768, 1024, Math.abs(System.nanoTime()), "VISUAL_PROFILE_SETUP");
+                    ImageGenerationStatus created = imageGateway.create(request, new String[0]);
+                    ImageGenerationStatus ready = null;
+                    for (int poll = 0; poll < 300; poll++) {
+                        ready = imageGateway.status(created.getJobId());
+                        if (ready.getState() == ImageGenerationStatus.State.READY) break;
+                        if (ready.getState() == ImageGenerationStatus.State.FAILED_FINAL) throw new IllegalStateException("Huajing 生成失败");
+                        Thread.sleep(1200L);
+                    }
+                    if (ready == null || ready.getResultAssetId() == null) throw new IllegalStateException("Huajing 生成超时");
+                    java.io.File tmp = new java.io.File(assetStore.tmpDir(), "identity_" + editing.getId() + "_" + i + ".png");
+                    imageGateway.download(ready.getResultAssetId(), tmp);
+                    String ref;
+                    try (java.io.FileInputStream in = new java.io.FileInputStream(tmp)) {
+                        ref = assetStore.storeStream(LocalAssetStore.DIR_IDENTITIES, tmp.getName(), ".png", in);
+                    }
+                    tmp.delete();
+                    assets.add(new CharacterVisualAsset(java.util.UUID.randomUUID().toString(),
+                            java.util.UUID.randomUUID().toString(), ref, null, "FRONT_FACE_CANDIDATE", i == 0, 768, 1024,
+                            System.currentTimeMillis()));
+                }
+                String profileId = java.util.UUID.randomUUID().toString();
+                java.util.List<CharacterVisualAsset> fixed = new java.util.ArrayList<>();
+                for (CharacterVisualAsset asset : assets) fixed.add(new CharacterVisualAsset(asset.getId(), profileId,
+                        asset.getLocalPath(), asset.getSha256(), asset.getAssetType(), asset.isPrimary(), asset.getWidth(), asset.getHeight(), asset.getCreatedAt()));
+                CharacterVisualProfile profile = new CharacterVisualProfile(profileId, editing.getId(),
+                        CharacterVisualProfile.Status.READY, CharacterVisualProfile.Source.GENERATED, 1,
+                        prompt, "身高：" + safe(heightText) + "；体型：" + safe(bodyType), "", System.currentTimeMillis(),
+                        System.currentTimeMillis(), fixed);
+                visualRepository.save(profile);
+                visualProfile.postValue(profile);
+            } catch (Exception error) {
+                events.postValue(new SingleEvent<>("error:visual_generate"));
+            } finally { visualGenerating.postValue(false); }
+        });
     }
 
     public LiveData<SingleEvent<String>> getEvents() {
@@ -258,12 +319,13 @@ public class CharacterEditViewModel extends ViewModel {
         executors.diskIO().execute(() -> {
             Script scriptBeforeSave = scriptRepository == null ? null : scriptRepository.getById(toSave.getScriptId());
             CharacterVisualProfile priorVisual = visualRepository == null ? null : visualRepository.getByCharacterId(toSave.getId());
-            if (scriptBeforeSave != null && scriptBeforeSave.isVisual()
+            boolean existingCharacter = characterRepository.getById(toSave.getId()) != null;
+            if (existingCharacter && scriptBeforeSave != null && scriptBeforeSave.isVisual()
                     && pendingFaceUri == null && (priorVisual == null || !priorVisual.isReady())) {
                 events.postValue(new SingleEvent<>("error:face_required"));
                 return;
             }
-            if (scriptBeforeSave != null && scriptBeforeSave.isVisual()
+            if (existingCharacter && scriptBeforeSave != null && scriptBeforeSave.isVisual()
                     && (heightText == null || heightText.trim().isEmpty()
                     || bodyType == null || bodyType.trim().isEmpty())) {
                 events.postValue(new SingleEvent<>("error:measurements_required"));

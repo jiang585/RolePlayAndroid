@@ -89,6 +89,10 @@ public class CharacterEditFragment extends Fragment {
         });
         avatarView.setOnClickListener(v -> imagePicker.launch("image/*"));
         view.findViewById(R.id.btn_pick_visual_face).setOnClickListener(v -> facePicker.launch("image/*"));
+        view.findViewById(R.id.btn_generate_visual_face).setOnClickListener(v -> {
+            viewModel.setVisualFields(textOf(visualDescriptionInput), textOf(visualHeightInput), textOf(visualBodyInput));
+            viewModel.generateVisualCandidates(textOf(visualDescriptionInput));
+        });
         saveButton.setOnClickListener(v -> save());
         aiEnhanceButton.setOnClickListener(v -> showAiEnhanceDialog());
 
@@ -103,6 +107,8 @@ public class CharacterEditFragment extends Fragment {
         viewModel.getAiProgress().observe(getViewLifecycleOwner(), aiProgressText::setText);
         viewModel.getAiDraft().observe(getViewLifecycleOwner(), this::populate);
         viewModel.getVisualProfile().observe(getViewLifecycleOwner(), this::renderVisualProfile);
+        viewModel.getVisualGenerating().observe(getViewLifecycleOwner(), generating ->
+                view.findViewById(R.id.btn_generate_visual_face).setEnabled(!Boolean.TRUE.equals(generating)));
         // 后台加载角色（DB 操作不得在主线程，架构文档 §3.2）
         ((RolePlayChatApp) requireActivity().getApplication()).container().executors
                 .diskIO().execute(() -> viewModel.load(scriptId, characterId));
@@ -235,6 +241,8 @@ public class CharacterEditFragment extends Fragment {
                 Toast.makeText(requireContext(), "请上传清晰正脸参考图", Toast.LENGTH_LONG).show();
             } else if (code.equals("measurements_required")) {
                 Toast.makeText(requireContext(), "有图剧本需要填写身高和体型", Toast.LENGTH_LONG).show();
+            } else if (code.equals("save_before_visual")) {
+                Toast.makeText(requireContext(), "请先保存角色，再生成视觉身份候选", Toast.LENGTH_LONG).show();
             } else {
                 Toast.makeText(requireContext(), com.example.roleplaychat.ui.common.ErrorMessageMapper.map(
                         com.example.roleplaychat.domain.model.AppErrorCode.fromCode(code)), Toast.LENGTH_SHORT).show();

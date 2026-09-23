@@ -56,7 +56,9 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
         if (modelClass.isAssignableFrom(CharacterEditViewModel.class)) {
             return (T) new CharacterEditViewModel(container.characterRepository,
                     container.saveCharacterUseCase, container.imageImporter, container.aiRepository,
-                    container.settingsRepository, container.executors);
+                    container.settingsRepository, container.executors,
+                    container.characterVisualRepository, container.scriptRepository, container.assetStore,
+                    container.imageGenerationGateway);
         }
         if (modelClass.isAssignableFrom(CharacterImportViewModel.class)) {
             return (T) new CharacterImportViewModel(container.importDataUseCase, container.executors);
