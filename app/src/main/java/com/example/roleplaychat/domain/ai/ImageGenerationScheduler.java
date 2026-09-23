@@ -17,6 +17,7 @@ import com.example.roleplaychat.domain.model.Script;
 import com.example.roleplaychat.domain.repository.CharacterVisualRepository;
 import com.example.roleplaychat.domain.repository.ImageGenerationGateway;
 import com.example.roleplaychat.domain.repository.ScriptRepository;
+import com.example.roleplaychat.domain.repository.ChatRepository;
 import com.example.roleplaychat.util.AppExecutors;
 import com.example.roleplaychat.util.IdGenerator;
 
@@ -36,6 +37,7 @@ public final class ImageGenerationScheduler {
     private final ImageGenerationJobDao jobDao;
     private final MessageAttachmentDao attachmentDao;
     private final MessageDao messageDao;
+    private final ChatRepository chatRepository;
     private final LocalAssetStore assetStore;
     private final AppExecutors executors;
     private final IdGenerator idGenerator;
@@ -44,9 +46,11 @@ public final class ImageGenerationScheduler {
                                     ImageGenerationGateway gateway, ImageGenerationJobDao jobDao,
                                     MessageAttachmentDao attachmentDao,
                                     MessageDao messageDao,
+                                    ChatRepository chatRepository,
                                     LocalAssetStore assetStore, AppExecutors executors, IdGenerator idGenerator) {
         this.scriptRepository = scriptRepository; this.visualRepository = visualRepository; this.gateway = gateway;
         this.jobDao = jobDao; this.attachmentDao = attachmentDao; this.messageDao = messageDao;
+        this.chatRepository = chatRepository;
         this.assetStore = assetStore;
         this.executors = executors; this.idGenerator = idGenerator;
     }
@@ -73,6 +77,11 @@ public final class ImageGenerationScheduler {
             com.example.roleplaychat.data.local.entity.MessageEntity related =
                     messageDao.findLatestByRequestAndCharacter(requestId, action.getCharacterId());
             if (related != null) job.message_id = related.id;
+        }
+        if (job.message_id == null) {
+            com.example.roleplaychat.domain.model.ChatMessage placeholder =
+                    chatRepository.insertImagePlaceholder(scriptId, action.getCharacterId(), now);
+            job.message_id = placeholder.getId();
         }
         job.client_job_id = "rp-" + jobId; job.trigger = action.getTrigger().name(); job.intent = action.getIntent().name();
         job.model = action.isIncludeCharacter() ? "qwenimage2.1" : "zimage";

@@ -122,7 +122,7 @@ public class AppContainer {
         this.imageGenerationScheduler = new ImageGenerationScheduler(
                 scriptRepository, characterVisualRepository, imageGenerationGateway,
                 database.imageGenerationJobDao(), database.messageAttachmentDao(),
-                database.messageDao(),
+                database.messageDao(), chatRepository,
                 assetStore, executors, idGenerator);
 
         this.aiOrchestrator = new AiTurnOrchestrator(
