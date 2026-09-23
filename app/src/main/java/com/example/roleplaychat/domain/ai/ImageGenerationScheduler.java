@@ -58,7 +58,11 @@ public final class ImageGenerationScheduler {
     public void enqueue(String scriptId, List<AiImageAction> actions, String requestId, long now) {
         if (actions == null || actions.isEmpty()) return;
         Script script = scriptRepository.getById(scriptId);
-        if (script == null || !script.isVisual()) return;
+        if (script == null) return;
+        // 旧剧本第一次收到图片动作时原地升级，保留原剧本 ID、聊天记录和文本设定。
+        if (!script.isVisual()) {
+            scriptRepository.setMediaMode(scriptId, Script.MediaMode.VISUAL, now);
+        }
         for (AiImageAction action : actions) enqueueOne(scriptId, action, requestId, now);
     }
 
