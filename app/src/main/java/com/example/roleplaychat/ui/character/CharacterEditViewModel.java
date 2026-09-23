@@ -94,6 +94,21 @@ public class CharacterEditViewModel extends ViewModel {
 
     public LiveData<CharacterVisualProfile> getVisualProfile() { return visualProfile; }
     public LiveData<Boolean> getVisualGenerating() { return visualGenerating; }
+    public void selectVisualCandidate(int index) {
+        CharacterVisualProfile current = visualProfile.getValue();
+        if (current == null || index < 0 || index >= current.getAssets().size() || visualRepository == null) return;
+        java.util.List<CharacterVisualAsset> assets = new java.util.ArrayList<>();
+        for (int i = 0; i < current.getAssets().size(); i++) {
+            CharacterVisualAsset a = current.getAssets().get(i);
+            assets.add(new CharacterVisualAsset(a.getId(), a.getProfileId(), a.getLocalPath(), a.getSha256(),
+                    a.getAssetType(), i == index, a.getWidth(), a.getHeight(), a.getCreatedAt()));
+        }
+        CharacterVisualProfile updated = new CharacterVisualProfile(current.getId(), current.getCharacterId(),
+                current.getStatus(), current.getSource(), current.getVersion(), current.getIdentityPrompt(),
+                current.getAppearanceJson(), current.getNegativePrompt(), current.getCreatedAt(),
+                System.currentTimeMillis(), assets);
+        visualRepository.save(updated); visualProfile.postValue(updated);
+    }
     public void setFaceUri(android.net.Uri uri) { pendingFaceUri = uri; }
     public void setVisualFields(String description, String height, String body) {
         visualDescription = description; heightText = height; bodyType = body;

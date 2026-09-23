@@ -188,6 +188,20 @@ public class CharacterEditFragment extends Fragment {
 
     private void renderVisualProfile(@Nullable CharacterVisualProfile profile) {
         if (profile == null) return;
+        visualFaceView.setOnClickListener(v -> {
+            if (profile.getAssets().size() <= 1) return;
+            String[] labels = new String[profile.getAssets().size()];
+            int checked = 0;
+            for (int i = 0; i < profile.getAssets().size(); i++) {
+                labels[i] = "候选 " + (i + 1);
+                if (profile.getAssets().get(i).isPrimary()) checked = i;
+            }
+            new MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("选择主参考脸")
+                    .setSingleChoiceItems(labels, checked, (dialog, which) -> {
+                        viewModel.selectVisualCandidate(which); dialog.dismiss();
+                    }).show();
+        });
         visualDescriptionInput.setText(profile.getIdentityPrompt());
         String appearance = profile.getAppearanceJson();
         if (appearance != null) {
