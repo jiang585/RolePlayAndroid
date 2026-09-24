@@ -128,7 +128,9 @@ public final class ImageGenerationScheduler {
     private void poll(ImageGenerationJobEntity job) throws Exception {
         for (int i = 0; i < 900; i++) {
             ImageGenerationStatus status = gateway.status(job.huajing_job_id);
+            if (status == null) throw new IllegalStateException("Huajing 返回空状态");
             job.status = status.getState().name(); job.error_code = status.getErrorCode(); job.result_asset_id = status.getResultAssetId(); jobDao.update(job);
+            updateProgressMessage(job, status);
             if (status.getState() == ImageGenerationStatus.State.READY && status.getResultAssetId() != null) {
                 File dest = new File(assetStore.tmpDir(), "generated_" + job.id + ".png");
                 gateway.download(status.getResultAssetId(), dest);
@@ -139,14 +141,37 @@ public final class ImageGenerationScheduler {
                 }
                 dest.delete();
                 job.status = "READY"; job.finished_at = System.currentTimeMillis(); jobDao.update(job);
+                if (job.message_id != null) messageDao.updateContent(job.message_id, "");
                 markAttachmentReady(job, localRef);
                 return;
             }
-            if (status.getState() == ImageGenerationStatus.State.FAILED_FINAL || status.getState() == ImageGenerationStatus.State.CANCELLED) return;
+            if (status.getState() == ImageGenerationStatus.State.FAILED_FINAL
+                    || status.getState() == ImageGenerationStatus.State.FAILED_RETRYABLE
+                    || status.getState() == ImageGenerationStatus.State.CANCELLED
+                    || status.getState() == ImageGenerationStatus.State.EXPIRED) {
+                job.finished_at = System.currentTimeMillis();
+                job.error_code = job.error_code == null ? status.getState().name() : job.error_code;
+                jobDao.update(job);
+                if (job.message_id != null) messageDao.updateContent(job.message_id, "图片生成失败：" + job.error_code);
+                markAttachmentFailed(job);
+                return;
+            }
             Thread.sleep(1200L);
         }
         job.status = "FAILED_RETRYABLE"; job.error_code = "GENERATION_TIMEOUT"; job.finished_at = System.currentTimeMillis(); jobDao.update(job);
         markAttachmentFailed(job);
+        if (job.message_id != null) messageDao.updateContent(job.message_id, "图片生成超时，可稍后重试");
+    }
+
+    private void updateProgressMessage(ImageGenerationJobEntity job, ImageGenerationStatus status) {
+        if (job.message_id == null) return;
+        long elapsed = Math.max(0L, System.currentTimeMillis() - (job.started_at == null ? job.created_at : job.started_at));
+        long seconds = elapsed / 1000L;
+        String stage = status.getStage() == null || status.getStage().trim().isEmpty()
+                ? status.getState().name() : status.getStage();
+        int percent = Math.round(status.getProgress() * 100f);
+        String progress = percent > 0 ? "（" + Math.max(0, Math.min(100, percent)) + "%）" : "";
+        messageDao.updateContent(job.message_id, "正在生成图片：" + stage + progress + " · 已用时 " + seconds + " 秒");
     }
 
     private static String buildPrompt(@Nullable CharacterVisualProfile profile, AiImageAction action) {

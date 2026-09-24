@@ -82,6 +82,8 @@ public class SettingsFragment extends Fragment {
         EditText huajingUrl = view.findViewById(R.id.input_huajing_url);
         EditText huajingCode = view.findViewById(R.id.input_huajing_code);
         huajingStatus = view.findViewById(R.id.text_huajing_status);
+        String savedHuajingUrl = viewModel.getHuajingBaseUrl();
+        if (savedHuajingUrl != null && !savedHuajingUrl.trim().isEmpty()) huajingUrl.setText(savedHuajingUrl);
         renderHuajingStatus();
         view.findViewById(R.id.btn_pair_huajing).setOnClickListener(v ->
                 viewModel.pairHuajing(textOf(huajingUrl), textOf(huajingCode)));
@@ -282,6 +284,9 @@ public class SettingsFragment extends Fragment {
         } else if (value.equals("huajing_paired")) {
             renderHuajingStatus();
             Toast.makeText(requireContext(), "Huajing 已配对", Toast.LENGTH_SHORT).show();
+        } else if (value.equals("huajing_address_updated")) {
+            renderHuajingStatus();
+            Toast.makeText(requireContext(), "Huajing 地址已更新，配对令牌未改变", Toast.LENGTH_SHORT).show();
         } else if (value.equals("huajing_cleared")) {
             renderHuajingStatus();
             Toast.makeText(requireContext(), "Huajing 配对已解除", Toast.LENGTH_SHORT).show();

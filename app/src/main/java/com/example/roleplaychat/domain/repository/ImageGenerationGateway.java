@@ -17,6 +17,8 @@ public interface ImageGenerationGateway {
     ImageGenerationStatus status(String jobId) throws IOException;
     File download(String assetId, File destination) throws IOException;
     boolean isConfigured();
+    String getBaseUrl();
+    void updateBaseUrl(String baseUrl);
     void configure(String baseUrl, String deviceId, String accessToken);
     void clearConfiguration();
 }

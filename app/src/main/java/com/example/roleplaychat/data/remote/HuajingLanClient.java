@@ -58,6 +58,14 @@ public final class HuajingLanClient implements ImageGenerationGateway {
         return !TextUtils.isEmpty(baseUrl) && !TextUtils.isEmpty(deviceId) && !TextUtils.isEmpty(accessToken);
     }
 
+    @Override public String getBaseUrl() { return baseUrl; }
+
+    @Override public synchronized void updateBaseUrl(String url) {
+        if (TextUtils.isEmpty(url) || !isConfigured()) return;
+        baseUrl = normalize(url);
+        secretStore.putSecret(KEY_BASE_URL, baseUrl);
+    }
+
     @Override public HuajingPairingResult claimPairing(String url, String pairingCode,
                                                         String deviceName, String appInstanceId) throws IOException {
         Map<String, String> payload = new HashMap<>();
@@ -149,10 +157,11 @@ public final class HuajingLanClient implements ImageGenerationGateway {
     private ImageGenerationStatus parseStatus(String raw, String fallbackId) {
         JsonObject json = gson.fromJson(raw, JsonObject.class);
         String id = json != null && json.has("jobId") ? json.get("jobId").getAsString() : fallbackId;
-        String state = json != null && json.has("status") ? json.get("status").getAsString() : "READY";
+        String state = json != null && json.has("status") && !json.get("status").isJsonNull()
+                ? json.get("status").getAsString() : "FAILED_FINAL";
         ImageGenerationStatus.State parsed;
         try { parsed = ImageGenerationStatus.State.valueOf(state.toUpperCase(java.util.Locale.ROOT)); }
-        catch (Exception ignored) { parsed = ImageGenerationStatus.State.READY; }
+        catch (Exception ignored) { parsed = ImageGenerationStatus.State.FAILED_FINAL; }
         float progress = json != null && json.has("progress") ? json.get("progress").getAsFloat() : 0f;
         String stage = json != null && json.has("stage") ? json.get("stage").getAsString() : "";
         String asset = nullableString(json, "resultAssetId");

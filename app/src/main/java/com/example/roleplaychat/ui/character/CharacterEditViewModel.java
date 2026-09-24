@@ -95,19 +95,27 @@ public class CharacterEditViewModel extends ViewModel {
     public LiveData<CharacterVisualProfile> getVisualProfile() { return visualProfile; }
     public LiveData<Boolean> getVisualGenerating() { return visualGenerating; }
     public void selectVisualCandidate(int index) {
-        CharacterVisualProfile current = visualProfile.getValue();
-        if (current == null || index < 0 || index >= current.getAssets().size() || visualRepository == null) return;
-        java.util.List<CharacterVisualAsset> assets = new java.util.ArrayList<>();
-        for (int i = 0; i < current.getAssets().size(); i++) {
-            CharacterVisualAsset a = current.getAssets().get(i);
-            assets.add(new CharacterVisualAsset(a.getId(), a.getProfileId(), a.getLocalPath(), a.getSha256(),
-                    a.getAssetType(), i == index, a.getWidth(), a.getHeight(), a.getCreatedAt()));
-        }
-        CharacterVisualProfile updated = new CharacterVisualProfile(current.getId(), current.getCharacterId(),
-                current.getStatus(), current.getSource(), current.getVersion(), current.getIdentityPrompt(),
-                current.getAppearanceJson(), current.getNegativePrompt(), current.getCreatedAt(),
-                System.currentTimeMillis(), assets);
-        visualRepository.save(updated); visualProfile.postValue(updated);
+        executors.diskIO().execute(() -> {
+            try {
+                CharacterVisualProfile current = visualRepository == null || editing == null
+                        ? null : visualRepository.getByCharacterId(editing.getId());
+                if (current == null || index < 0 || index >= current.getAssets().size()) return;
+                java.util.List<CharacterVisualAsset> assets = new java.util.ArrayList<>();
+                for (int i = 0; i < current.getAssets().size(); i++) {
+                    CharacterVisualAsset a = current.getAssets().get(i);
+                    assets.add(new CharacterVisualAsset(a.getId(), a.getProfileId(), a.getLocalPath(), a.getSha256(),
+                            a.getAssetType(), i == index, a.getWidth(), a.getHeight(), a.getCreatedAt()));
+                }
+                CharacterVisualProfile updated = new CharacterVisualProfile(current.getId(), current.getCharacterId(),
+                        current.getStatus(), current.getSource(), current.getVersion(), current.getIdentityPrompt(),
+                        current.getAppearanceJson(), current.getNegativePrompt(), current.getCreatedAt(),
+                        System.currentTimeMillis(), assets);
+                visualRepository.save(updated);
+                visualProfile.postValue(updated);
+            } catch (RuntimeException error) {
+                events.postValue(new SingleEvent<>("error:visual_save"));
+            }
+        });
     }
     public void setFaceUri(android.net.Uri uri) { pendingFaceUri = uri; }
     public void setVisualFields(String description, String height, String body) {
@@ -116,22 +124,26 @@ public class CharacterEditViewModel extends ViewModel {
 
     /** 生成三张身份候选；首张先作为当前主图，用户可在视觉设定卡片中替换。 */
     public void generateVisualCandidates(String prompt) {
-        if (editing == null || characterRepository.getById(editing.getId()) == null
-                || imageGateway == null || visualRepository == null || assetStore == null) {
-            events.postValue(new SingleEvent<>("error:save_before_visual"));
-            return;
-        }
-        visualGenerating.postValue(true);
         executors.networkIO().execute(() -> {
             try {
+                CharacterProfile currentEditing = editing;
+                if (currentEditing == null || imageGateway == null || visualRepository == null || assetStore == null
+                        || characterRepository.getById(currentEditing.getId()) == null) {
+                    events.postValue(new SingleEvent<>("error:save_before_visual"));
+                    return;
+                }
+                visualGenerating.postValue(true);
                 java.util.List<CharacterVisualAsset> assets = new java.util.ArrayList<>();
                 for (int i = 0; i < 3; i++) {
-                    String clientJob = "identity-" + editing.getId() + "-" + i + "-" + System.nanoTime();
-                    ImageGenerationRequest request = new ImageGenerationRequest(clientJob, editing.getScriptId(), editing.getId(),
+                    String clientJob = "identity-" + currentEditing.getId() + "-" + i + "-" + System.nanoTime();
+                    ImageGenerationRequest request = new ImageGenerationRequest(clientJob, currentEditing.getScriptId(), currentEditing.getId(),
                             ImageGenerationRequest.Model.ZIMAGE, ImageGenerationRequest.Mode.TXT2IMG,
                             "正面人物证件式肖像，" + (prompt == null ? "自然表情，清晰五官" : prompt.trim()), "",
                             java.util.Collections.emptyList(), 768, 1024, Math.abs(System.nanoTime()), "VISUAL_PROFILE_SETUP");
                     ImageGenerationStatus created = imageGateway.create(request, new String[0]);
+                    if (created == null || created.getJobId() == null || created.getJobId().trim().isEmpty()) {
+                        throw new IllegalStateException("Huajing 未返回任务编号");
+                    }
                     ImageGenerationStatus ready = null;
                     for (int poll = 0; poll < 300; poll++) {
                         ready = imageGateway.status(created.getJobId());
@@ -147,7 +159,7 @@ public class CharacterEditViewModel extends ViewModel {
                         Thread.sleep(1200L);
                     }
                     if (ready == null || ready.getResultAssetId() == null) throw new IllegalStateException("Huajing 生成超时");
-                    java.io.File tmp = new java.io.File(assetStore.tmpDir(), "identity_" + editing.getId() + "_" + i + ".png");
+                    java.io.File tmp = new java.io.File(assetStore.tmpDir(), "identity_" + currentEditing.getId() + "_" + i + ".png");
                     imageGateway.download(ready.getResultAssetId(), tmp);
                     String ref;
                     try (java.io.FileInputStream in = new java.io.FileInputStream(tmp)) {
@@ -162,7 +174,7 @@ public class CharacterEditViewModel extends ViewModel {
                 java.util.List<CharacterVisualAsset> fixed = new java.util.ArrayList<>();
                 for (CharacterVisualAsset asset : assets) fixed.add(new CharacterVisualAsset(asset.getId(), profileId,
                         asset.getLocalPath(), asset.getSha256(), asset.getAssetType(), asset.isPrimary(), asset.getWidth(), asset.getHeight(), asset.getCreatedAt()));
-                CharacterVisualProfile profile = new CharacterVisualProfile(profileId, editing.getId(),
+                CharacterVisualProfile profile = new CharacterVisualProfile(profileId, currentEditing.getId(),
                         CharacterVisualProfile.Status.READY, CharacterVisualProfile.Source.GENERATED, 1,
                         prompt, "身高：" + safe(heightText) + "；体型：" + safe(bodyType), "", System.currentTimeMillis(),
                         System.currentTimeMillis(), fixed);

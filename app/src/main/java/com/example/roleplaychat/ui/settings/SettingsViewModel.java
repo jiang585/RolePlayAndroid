@@ -58,6 +58,12 @@ public class SettingsViewModel extends ViewModel {
         if (imageGenerationGateway == null) return;
         executors.networkIO().execute(() -> {
             try {
+                if (imageGenerationGateway.isConfigured()
+                        && (pairingCode == null || pairingCode.trim().isEmpty())) {
+                    imageGenerationGateway.updateBaseUrl(baseUrl.trim());
+                    events.postValue(new SingleEvent<>("huajing_address_updated"));
+                    return;
+                }
                 imageGenerationGateway.claimPairing(baseUrl.trim(), pairingCode.trim(), "RolePlayChat", UUID.randomUUID().toString());
                 events.postValue(new SingleEvent<>("huajing_paired"));
             } catch (Exception error) {
@@ -73,6 +79,10 @@ public class SettingsViewModel extends ViewModel {
 
     public boolean isHuajingConfigured() {
         return imageGenerationGateway != null && imageGenerationGateway.isConfigured();
+    }
+
+    public String getHuajingBaseUrl() {
+        return imageGenerationGateway == null ? null : imageGenerationGateway.getBaseUrl();
     }
 
     public LiveData<ApiConfig> getConfig() {
