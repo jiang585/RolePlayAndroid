@@ -4,6 +4,7 @@ import androidx.annotation.Nullable;
 
 import com.example.roleplaychat.domain.model.AiBatch;
 import com.example.roleplaychat.domain.model.AiEvent;
+import com.example.roleplaychat.domain.model.AiImageAction;
 import com.example.roleplaychat.domain.model.AiRequest;
 import com.example.roleplaychat.domain.model.AppErrorCode;
 import com.example.roleplaychat.domain.model.CharacterProfile;
@@ -284,6 +285,9 @@ public final class AiTurnOrchestrator {
         try {
             AiBatch batch = StructuredOutputParser.parse(fullText, requestId, scriptId);
             batch = AiOutputValidator.normalizeCharacterReferences(batch, npcPool);
+            // 明确的“发照片/自拍给我看看”是应用级动作，不能依赖模型是否记得输出 image_actions。
+            // 先在本地补动作，再走原有校验和入队，保证角色仍可正常回复文字。
+            batch = ensureExplicitImageAction(batch, requestId, mode, recent, npcPool, mentionedCharacter);
             if (mentionedCharacter != null) {
                 List<AiEvent> targeted = new ArrayList<>();
                 boolean targetTurnAdded = false;
@@ -312,7 +316,7 @@ public final class AiTurnOrchestrator {
                 if (hadValidOutput) {
                     callback.onBatchCommitted(requestId, validated);
                 } else if (mode != AiRequest.Mode.AUTO_ADVANCE) {
-                    insertFallbackText(requestId, scriptId, npcPool, mentionedCharacter, fullText, session, callback);
+                    insertFallbackText(requestId, scriptId, npcPool, mentionedCharacter, recent, fullText, session, callback);
                 } else {
                     callback.onBatchCommitted(requestId, validated);
                 }
@@ -324,7 +328,7 @@ public final class AiTurnOrchestrator {
             }
             callback.onBatchCommitted(requestId, validated);
         } catch (StructuredOutputParser.OutputInvalidException e) {
-            insertFallbackText(requestId, scriptId, npcPool, mentionedCharacter, fullText, session, callback);
+            insertFallbackText(requestId, scriptId, npcPool, mentionedCharacter, recent, fullText, session, callback);
         }
     }
 
@@ -349,6 +353,7 @@ public final class AiTurnOrchestrator {
     private void insertFallbackText(String requestId, String scriptId,
                                     List<CharacterProfile> npcPool,
                                     @Nullable CharacterProfile mentionedCharacter,
+                                    List<ChatMessage> recent,
                                     String fullText,
                                     ActiveRequest session,
                                     Callback callback) {
@@ -365,8 +370,13 @@ public final class AiTurnOrchestrator {
         AiEvent event = new AiEvent(
                 idGenerator.newRequestId(), fallbackType,
                 characterId, text, 0);
+        List<AiImageAction> imageActions = new ArrayList<>();
+        AiImageAction forced = buildExplicitImageAction(requestId, AiRequest.Mode.NORMAL_REPLY,
+                recent, npcPool, mentionedCharacter);
+        if (forced != null) imageActions.add(forced);
         AiBatch fallback = new AiBatch(requestId, scriptId,
-                java.util.Collections.singletonList(event), false);
+                java.util.Collections.singletonList(event), false, false,
+                java.util.Collections.emptyList(), imageActions);
         if (!commitIfNotDiscarded(scriptId, session, fallback,
                 AiOutputValidator.idsOf(npcPool), requestId)) {
             callback.onGenerationFailed(requestId, AppErrorCode.CANCELLED_BY_USER);
@@ -442,5 +452,102 @@ public final class AiTurnOrchestrator {
             }
         }
         return match;
+    }
+
+    private AiBatch ensureExplicitImageAction(AiBatch batch, String requestId, AiRequest.Mode mode,
+                                              List<ChatMessage> recent, List<CharacterProfile> npcPool,
+                                              @Nullable CharacterProfile mentionedCharacter) {
+        AiImageAction forced = buildExplicitImageAction(requestId, mode, recent, npcPool, mentionedCharacter);
+        if (forced == null) return batch;
+        for (AiImageAction existing : batch.getImageActions()) {
+            if (forced.getCharacterId().equals(existing.getCharacterId())
+                    && existing.isIncludeCharacter()) return batch;
+        }
+        List<AiImageAction> actions = new ArrayList<>(batch.getImageActions());
+        actions.add(forced);
+        return new AiBatch(batch.getRequestId(), batch.getScriptId(), batch.getEvents(),
+                batch.shouldContinueScene(), batch.shouldAwaitPlayer(), batch.getMomentActions(), actions);
+    }
+
+    @Nullable
+    private AiImageAction buildExplicitImageAction(String requestId, AiRequest.Mode mode,
+                                                   List<ChatMessage> recent,
+                                                   List<CharacterProfile> npcPool,
+                                                   @Nullable CharacterProfile mentionedCharacter) {
+        if (mode == AiRequest.Mode.AUTO_ADVANCE || !containsPhotoRequest(recent)) return null;
+        String userText = latestPlayerText(recent);
+        if (userText == null || userText.trim().isEmpty()) return null;
+        CharacterProfile target = mentionedCharacter;
+        if (target == null) target = findNamedCharacter(userText, npcPool);
+        if (target == null && npcPool.size() == 1) target = npcPool.get(0);
+        if (target == null) target = findLatestCharacterTurn(recent, npcPool);
+        if (target == null) return null;
+        AiImageAction.Intent intent = userText.contains("自拍")
+                ? AiImageAction.Intent.SELFIE
+                : userText.contains("穿搭") || userText.contains("衣服") || userText.contains("穿着")
+                ? AiImageAction.Intent.OUTFIT_SHOW : AiImageAction.Intent.PHOTO_SHARE;
+        return new AiImageAction(requestId + ":explicit-photo", null, target.getId(), intent,
+                AiImageAction.Trigger.EXPLICIT_USER_REQUEST,
+                "玩家明确要求" + target.getName() + "发送照片：" + userText,
+                userText.contains("全身") ? "全身，9:16 竖屏" : "自然的半身或全身，9:16 竖屏",
+                null, null, true);
+    }
+
+    private static boolean containsPhotoRequest(List<ChatMessage> recent) {
+        String text = latestPlayerText(recent);
+        if (text == null) return false;
+        boolean photo = text.contains("照片") || text.contains("图片") || text.contains("自拍")
+                || text.contains("相片") || text.contains("靓照") || text.contains("拍给我")
+                || text.contains("拍一张") || text.contains("发张");
+        boolean request = text.contains("发") || text.contains("拍") || text.contains("给我")
+                || text.contains("传") || text.contains("分享") || text.contains("来一张")
+                || text.contains("看看");
+        return photo && request;
+    }
+
+    @Nullable
+    private static String latestPlayerText(List<ChatMessage> recent) {
+        if (recent == null) return null;
+        for (int i = recent.size() - 1; i >= 0; i--) {
+            ChatMessage message = recent.get(i);
+            if (message != null && message.getSide() == ChatMessage.Side.MINE
+                    && message.getType() == ChatMessage.Type.CHARACTER_TEXT) {
+                return message.getContent();
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    private static CharacterProfile findNamedCharacter(String text, List<CharacterProfile> characters) {
+        CharacterProfile match = null;
+        int longest = 0;
+        for (CharacterProfile character : characters) {
+            List<String> names = new ArrayList<>();
+            names.add(character.getName());
+            names.addAll(character.getAliases());
+            for (String name : names) {
+                if (name != null && name.length() > longest && text.contains(name)) {
+                    match = character;
+                    longest = name.length();
+                }
+            }
+        }
+        return match;
+    }
+
+    @Nullable
+    private static CharacterProfile findLatestCharacterTurn(List<ChatMessage> recent,
+                                                            List<CharacterProfile> characters) {
+        if (recent == null) return null;
+        for (int i = recent.size() - 1; i >= 0; i--) {
+            ChatMessage message = recent.get(i);
+            if (message == null || message.getSide() != ChatMessage.Side.THEIRS
+                    || message.getCharacterId() == null) continue;
+            for (CharacterProfile character : characters) {
+                if (character.getId().equals(message.getCharacterId())) return character;
+            }
+        }
+        return null;
     }
 }
