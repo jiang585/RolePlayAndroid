@@ -26,4 +26,7 @@ public interface MessageAttachmentDao {
 
     @Query("SELECT * FROM message_attachments WHERE message_id = :messageId ORDER BY sort_index ASC")
     List<MessageAttachmentEntity> getForMessage(String messageId);
+
+    @Query("SELECT * FROM message_attachments")
+    List<MessageAttachmentEntity> getAll();
 }

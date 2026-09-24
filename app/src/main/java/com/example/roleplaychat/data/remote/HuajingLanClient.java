@@ -70,6 +70,11 @@ public final class HuajingLanClient implements ImageGenerationGateway {
 
     @Override public String getBaseUrl() { return baseUrl; }
 
+    /** 在应用启动后主动刷新一次地址，让用户进入聊天时已经完成无感换 IP。 */
+    public void refreshAddress() {
+        if (isConfigured()) discoverAndUpdate();
+    }
+
     @Override public synchronized void updateBaseUrl(String url) {
         if (TextUtils.isEmpty(url) || !isConfigured()) return;
         baseUrl = normalize(url);

@@ -11,6 +11,9 @@ import com.example.roleplaychat.data.local.AppDatabase;
 import com.example.roleplaychat.data.local.entity.AppearanceEntity;
 import com.example.roleplaychat.data.local.entity.CharacterEntity;
 import com.example.roleplaychat.data.local.entity.ScriptEntity;
+import com.example.roleplaychat.data.local.entity.MessageAttachmentEntity;
+import com.example.roleplaychat.data.local.entity.CharacterVisualAssetEntity;
+import com.example.roleplaychat.data.file.ImageFavoriteStore;
 
 import java.util.HashSet;
 import java.util.List;
@@ -30,12 +33,16 @@ public class OrphanAssetCleanupWorker extends Worker {
     @Override
     public Result doWork() {
         RolePlayChatApp app = (RolePlayChatApp) getApplicationContext();
-        Set<String> referenced = collectReferencedAssets(app.container().database);
+        Set<String> referenced = collectReferencedAssets(app.container().database, app.getApplicationContext());
         app.container().assetStore.deleteOrphanAssets(referenced);
         return Result.success();
     }
 
     public static Set<String> collectReferencedAssets(AppDatabase database) {
+        return collectReferencedAssets(database, null);
+    }
+
+    private static Set<String> collectReferencedAssets(AppDatabase database, @androidx.annotation.Nullable Context context) {
         Set<String> referenced = new HashSet<>();
 
         List<ScriptEntity> scripts = database.scriptDao().getAll();
@@ -71,6 +78,19 @@ public class OrphanAssetCleanupWorker extends Worker {
                 referenced.add(appearance.background_ref);
             }
         }
+
+        // 聊天生图和角色身份图由附件/视觉身份表引用，不能被清理任务误删。
+        List<MessageAttachmentEntity> attachments = database.messageAttachmentDao().getAll();
+        for (MessageAttachmentEntity attachment : attachments) {
+            if (attachment.local_path != null) referenced.add(attachment.local_path);
+        }
+        List<CharacterVisualAssetEntity> visualAssets = database.characterVisualAssetDao().getAll();
+        for (CharacterVisualAssetEntity asset : visualAssets) {
+            if (asset.local_path != null) referenced.add(asset.local_path);
+        }
+
+        // 收藏是独立于剧本的用户资产，即使剧本被删除，也应继续保留。
+        if (context != null) referenced.addAll(new ImageFavoriteStore(context).all());
 
         return referenced;
     }

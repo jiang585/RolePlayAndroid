@@ -109,7 +109,12 @@ public class AppContainer {
         this.aiServiceFactory = new OpenAiServiceFactory(settingsRepository.getApiConfig());
         settingsRepository.setApiConfigChangeListener(aiServiceFactory::updateConfig);
         this.aiRepository = new AiRepositoryImpl(aiServiceFactory);
-        this.imageGenerationGateway = new HuajingLanClient(this.context, secretStore);
+        com.example.roleplaychat.data.remote.HuajingLanClient huajingClient =
+                new com.example.roleplaychat.data.remote.HuajingLanClient(this.context, secretStore);
+        this.imageGenerationGateway = huajingClient;
+        if (huajingClient.isConfigured()) {
+            this.executors.networkIO().execute(huajingClient::refreshAddress);
+        }
 
         this.scriptRepository = new ScriptRepositoryImpl(database);
         this.worldRepository = new WorldRepositoryImpl(database);

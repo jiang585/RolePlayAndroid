@@ -17,6 +17,9 @@ public interface CharacterVisualAssetDao {
     @Query("SELECT * FROM character_visual_assets WHERE profile_id = :profileId AND is_primary = 1 LIMIT 1")
     CharacterVisualAssetEntity getPrimary(String profileId);
 
+    @Query("SELECT * FROM character_visual_assets")
+    List<CharacterVisualAssetEntity> getAll();
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(CharacterVisualAssetEntity entity);
 

@@ -212,8 +212,10 @@ public final class ImageGenerationScheduler {
         long elapsed = Math.max(0L, System.currentTimeMillis() - (job.started_at == null ? job.created_at : job.started_at));
         long seconds = elapsed / 1000L;
         int percent = Math.round(status.getProgress() * 100f);
+        String elapsedLine = seconds > 0 ? "\n已经等了 " + seconds + " 秒啦" : "";
         messageDao.updateContent(job.message_id, waitingLine(characterName(job.character_id), seconds, null)
-                + (percent > 0 ? "\n已经拍到 " + Math.max(0, Math.min(100, percent)) + "% 啦" : ""));
+                + elapsedLine
+                + (percent > 0 ? " · 已经拍到 " + Math.max(0, Math.min(100, percent)) + "% 啦" : ""));
     }
 
     private String characterName(@Nullable String characterId) {
