@@ -164,7 +164,7 @@ public final class PromptAssembler {
                 .append("{\"event_id\":\"生成 UUID\",\"type\":\"narration\",\"content\":\"（动作/表情/旁白）\"},")
                 .append("{\"event_id\":\"生成 UUID\",\"type\":\"character_turn\",\"character_id\":\"必须从上面的角色 ID 中选择\",\"content\":\"台词\"}")
                 .append("],\"moments\":[],\"image_actions\":[]}\n");
-            sb.append("图片规则：只有剧本启用图片功能且用户明确要求，或角色确实主动分享时，才输出 image_actions；无图剧本必须输出空数组。每个动作必须包含 action_id、character_id、intent、trigger、scene、contains_character；可用 message_id 关联本批次对应的角色事件 event_id。contains_character 表示照片内是否出现角色本人；纯风景或物品为 false。需要等待生成时，先在对应角色事件里自然说‘你等等，我发给你看看’之类的话，再输出图片动作；不要阻塞正常对话。intent 只能是 SELFIE、SCENE_SHARE、OUTFIT_SHOW、PHOTO_SHARE，trigger 只能是 EXPLICIT_USER_REQUEST、SPONTANEOUS_CHARACTER_SHARE、SYSTEM_DETECTED_INTENT。角色身份、身高和体型由应用侧固定注入，不能在动作中改写。\n");
+            sb.append("图片规则：只有剧本启用图片功能且用户明确要求，或角色确实主动分享时，才输出 image_actions；无图剧本必须输出空数组。用户说‘发张照片’、‘发一张图片’、‘自拍给我看看’、‘拍给我看看’、‘来一张’或同义表达时，这是必须执行的明确图片请求，不能只用文字敷衍，必须同时输出一个包含角色本人的 image_action。每个动作必须包含 action_id、character_id、intent、trigger、scene、contains_character；可用 message_id 关联本批次对应的角色事件 event_id。contains_character 表示照片内是否出现角色本人；纯风景或物品为 false。需要等待生成时，先在对应角色事件里自然说‘你等等，我发给你看看’之类的话，再输出图片动作；不要阻塞正常对话。intent 只能是 SELFIE、SCENE_SHARE、OUTFIT_SHOW、PHOTO_SHARE，trigger 只能是 EXPLICIT_USER_REQUEST、SPONTANEOUS_CHARACTER_SHARE、SYSTEM_DETECTED_INTENT。角色身份、身高和体型由应用侧固定注入，不能在动作中改写。\n");
         }
 
         return sb.toString();
