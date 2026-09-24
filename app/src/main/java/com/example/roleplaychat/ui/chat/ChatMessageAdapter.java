@@ -40,6 +40,10 @@ public class ChatMessageAdapter extends ListAdapter<ChatListItem, RecyclerView.V
         void onAvatarClick(ChatMessage message);
     }
 
+    public interface ImageClickListener {
+        void onImageClick(ChatMessage message, MessageAttachment attachment);
+    }
+
     private static final int TYPE_MINE = 0;
     private static final int TYPE_THEIRS = 1;
     private static final int TYPE_NARRATION = 2;
@@ -49,12 +53,15 @@ public class ChatMessageAdapter extends ListAdapter<ChatListItem, RecyclerView.V
     private Appearance appearance;
     private final AvatarLongClickListener avatarLongClickListener;
     private final AvatarClickListener avatarClickListener;
+    private final ImageClickListener imageClickListener;
 
     public ChatMessageAdapter(AvatarClickListener avatarClickListener,
-                              AvatarLongClickListener avatarLongClickListener) {
+                              AvatarLongClickListener avatarLongClickListener,
+                              ImageClickListener imageClickListener) {
         super(DIFF);
         this.avatarClickListener = avatarClickListener;
         this.avatarLongClickListener = avatarLongClickListener;
+        this.imageClickListener = imageClickListener;
     }
 
     public void setAppearance(@Nullable Appearance appearance) {
@@ -206,6 +213,7 @@ public class ChatMessageAdapter extends ListAdapter<ChatListItem, RecyclerView.V
         if (ready == null) {
             imageView.setVisibility(View.GONE);
             imageView.setImageDrawable(null);
+            imageView.setOnClickListener(null);
             return;
         }
         File file = ((RolePlayChatApp) imageView.getContext().getApplicationContext())
@@ -216,6 +224,10 @@ public class ChatMessageAdapter extends ListAdapter<ChatListItem, RecyclerView.V
         }
         imageView.setVisibility(View.VISIBLE);
         Glide.with(imageView.getContext()).load(file).into(imageView);
+        MessageAttachment clicked = ready;
+        imageView.setOnClickListener(v -> {
+            if (imageClickListener != null) imageClickListener.onImageClick(message, clicked);
+        });
     }
 
     private String bubbleStyleId() {

@@ -138,8 +138,8 @@ public class CharacterEditViewModel extends ViewModel {
                     String clientJob = "identity-" + currentEditing.getId() + "-" + i + "-" + System.nanoTime();
                     ImageGenerationRequest request = new ImageGenerationRequest(clientJob, currentEditing.getScriptId(), currentEditing.getId(),
                             ImageGenerationRequest.Model.ZIMAGE, ImageGenerationRequest.Mode.TXT2IMG,
-                            "正面人物证件式肖像，" + (prompt == null ? "自然表情，清晰五官" : prompt.trim()), "",
-                            java.util.Collections.emptyList(), 768, 1024, Math.abs(System.nanoTime()), "VISUAL_PROFILE_SETUP");
+                            "正面人物头像，1:1 方形构图，脸部清晰、自然可爱的表情，" + (prompt == null ? "清晰五官" : prompt.trim()), "",
+                            java.util.Collections.emptyList(), 1024, 1024, Math.abs(System.nanoTime()), "VISUAL_PROFILE_SETUP");
                     ImageGenerationStatus created = imageGateway.create(request, new String[0]);
                     if (created == null || created.getJobId() == null || created.getJobId().trim().isEmpty()) {
                         throw new IllegalStateException("Huajing 未返回任务编号");
@@ -167,7 +167,7 @@ public class CharacterEditViewModel extends ViewModel {
                     }
                     tmp.delete();
                     assets.add(new CharacterVisualAsset(java.util.UUID.randomUUID().toString(),
-                            java.util.UUID.randomUUID().toString(), ref, null, "FRONT_FACE_CANDIDATE", i == 0, 768, 1024,
+                            java.util.UUID.randomUUID().toString(), ref, null, "FRONT_FACE_CANDIDATE", i == 0, 1024, 1024,
                             System.currentTimeMillis()));
                 }
                 String profileId = java.util.UUID.randomUUID().toString();

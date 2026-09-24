@@ -1,5 +1,7 @@
 package com.example.roleplaychat.data.remote;
 
+import android.content.Context;
+import android.net.wifi.WifiManager;
 import android.text.TextUtils;
 
 import androidx.annotation.Nullable;
@@ -17,6 +19,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetSocketAddress;
+import java.net.SocketTimeoutException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -31,18 +37,22 @@ import okio.BufferedSink;
 
 /** Authenticated LAN client for Huajing's high-level generation API. */
 public final class HuajingLanClient implements ImageGenerationGateway {
+    private static final int DISCOVERY_PORT = 17891;
     private static final String KEY_BASE_URL = "huajing.base_url";
     private static final String KEY_DEVICE_ID = "huajing.device_id";
     private static final String KEY_TOKEN = "huajing.access_token";
 
     private final SecretStore secretStore;
+    private final Context context;
     private final OkHttpClient client;
     private final Gson gson = new Gson();
     private volatile String baseUrl;
     private volatile String deviceId;
     private volatile String accessToken;
+    private volatile long lastDiscoveryAt;
 
-    public HuajingLanClient(SecretStore secretStore) {
+    public HuajingLanClient(Context context, SecretStore secretStore) {
+        this.context = context.getApplicationContext();
         this.secretStore = secretStore;
         this.baseUrl = secretStore.getSecret(KEY_BASE_URL);
         this.deviceId = secretStore.getSecret(KEY_DEVICE_ID);
@@ -144,14 +154,101 @@ public final class HuajingLanClient implements ImageGenerationGateway {
 
     private Response execute(Request request) throws IOException {
         if (!isConfigured()) throw new IOException("Huajing is not paired");
-        Request authenticated = request.newBuilder().header("Authorization", "Bearer " + accessToken)
-                .header("X-Huajing-Device", deviceId).build();
-        Response response = client.newCall(authenticated).execute();
+        Request authenticated = authenticated(request);
+        Response response;
+        try {
+            response = client.newCall(authenticated).execute();
+        } catch (IOException first) {
+            // 电脑重启、DHCP 换地址或 Wi-Fi 重连后，原地址可能已经失效。
+            // 用已保存的 deviceId + token 在局域网发现新地址，再只重试一次。
+            if (!discoverAndUpdate()) throw first;
+            response = client.newCall(authenticated(request.newBuilder()
+                    .url(urlForPath(request.url().encodedPath()))
+                    .build())).execute();
+        }
+        if (response.code() == 401 && discoverAndUpdate()) {
+            response.close();
+            response = client.newCall(authenticated(request.newBuilder()
+                    .url(urlForPath(request.url().encodedPath())).build())).execute();
+        }
         if (!response.isSuccessful()) {
             String message = response.body() == null ? "HTTP " + response.code() : response.body().string();
             response.close(); throw new IOException("Huajing request failed: " + response.code() + " " + message);
         }
         return response;
+    }
+
+    private Request authenticated(Request request) {
+        return request.newBuilder().header("Authorization", "Bearer " + accessToken)
+                .header("X-Huajing-Device", deviceId).build();
+    }
+
+    /**
+     * 监听 Huajing 的无凭据 UDP 服务公告。公告只包含服务名和端口，
+     * 真正的身份验证仍由 /v1/connection 使用已保存令牌完成。
+     */
+    private synchronized boolean discoverAndUpdate() {
+        if (!isConfigured()) return false;
+        long now = System.currentTimeMillis();
+        if (now - lastDiscoveryAt < 2500L) return false;
+        lastDiscoveryAt = now;
+        String old = baseUrl;
+        WifiManager wifi = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        WifiManager.MulticastLock lock = wifi == null ? null : wifi.createMulticastLock("huajing-discovery");
+        if (lock != null) { lock.setReferenceCounted(false); lock.acquire(); }
+        try (DatagramSocket socket = new DatagramSocket(null)) {
+            socket.setReuseAddress(true);
+            socket.bind(new InetSocketAddress(DISCOVERY_PORT));
+            socket.setBroadcast(true);
+            socket.setSoTimeout(350);
+            byte[] buffer = new byte[512];
+            long deadline = now + 4500L;
+            while (System.currentTimeMillis() < deadline) {
+                DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+                try {
+                    socket.receive(packet);
+                } catch (SocketTimeoutException timeout) {
+                    continue;
+                }
+                String payload = new String(packet.getData(), packet.getOffset(), packet.getLength(), StandardCharsets.UTF_8);
+                if (!payload.contains("\"service\":\"huajing\"") || !payload.contains("\"protocol\":1")) continue;
+                int port = 17890;
+                int marker = payload.indexOf("\"port\":");
+                if (marker >= 0) {
+                    try { port = Integer.parseInt(payload.substring(marker + 7).replaceAll("[^0-9].*", "")); }
+                    catch (RuntimeException ignored) { }
+                }
+                String candidate = "http://" + packet.getAddress().getHostAddress() + ":" + port + "/";
+                if (probeCandidate(candidate)) {
+                    baseUrl = candidate;
+                    secretStore.putSecret(KEY_BASE_URL, candidate);
+                    return true;
+                }
+            }
+        } catch (IOException ignored) {
+            // 保留原地址，调用方继续返回原始网络错误。
+        } finally {
+            if (lock != null && lock.isHeld()) lock.release();
+        }
+        baseUrl = old;
+        return false;
+    }
+
+    private boolean probeCandidate(String candidate) {
+        Request request = new Request.Builder().url(candidate + "v1/connection")
+                .header("Authorization", "Bearer " + accessToken)
+                .header("X-Huajing-Device", deviceId).get().build();
+        try (Response response = client.newCall(request).execute()) {
+            return response.isSuccessful();
+        } catch (IOException ignored) {
+            return false;
+        }
+    }
+
+    private String urlForPath(String encodedPath) {
+        String path = encodedPath == null ? "" : encodedPath;
+        while (path.startsWith("/")) path = path.substring(1);
+        return baseUrl + path;
     }
 
     private ImageGenerationStatus parseStatus(String raw, String fallbackId) {

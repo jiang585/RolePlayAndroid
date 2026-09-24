@@ -2,13 +2,22 @@ package com.example.roleplaychat.ui.chat;
 
 import android.animation.ObjectAnimator;
 import android.animation.TimeInterpolator;
+import android.app.Dialog;
+import android.content.ContentValues;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,18 +30,26 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.roleplaychat.R;
 import com.example.roleplaychat.RolePlayChatApp;
+import com.example.roleplaychat.data.file.ImageFavoriteStore;
+import com.example.roleplaychat.data.file.LocalAssetStore;
 import com.example.roleplaychat.di.ViewModelFactory;
 import com.example.roleplaychat.domain.model.Appearance;
 import com.example.roleplaychat.domain.model.CharacterProfile;
 import com.example.roleplaychat.domain.model.PlayerIdentity;
 import com.example.roleplaychat.domain.model.Script;
 import com.example.roleplaychat.domain.model.ChatMessage;
+import com.example.roleplaychat.domain.model.MessageAttachment;
+import com.bumptech.glide.Glide;
 import com.example.roleplaychat.ui.common.SingleEvent;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import java.util.ArrayList;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.OutputStream;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -61,6 +78,16 @@ public class ChatFragment extends Fragment {
     private final List<ObjectAnimator> dotAnimators = new ArrayList<>();
     private int memberCount;
     private String identityName = "";
+    private ImageFavoriteStore favoriteStore;
+    private File pendingSaveFile;
+    private final androidx.activity.result.ActivityResultLauncher<Intent> saveDocumentLauncher =
+            registerForActivityResult(new androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == android.app.Activity.RESULT_OK && result.getData() != null
+                        && result.getData().getData() != null && pendingSaveFile != null) {
+                    copyToUri(pendingSaveFile, result.getData().getData());
+                }
+                pendingSaveFile = null;
+            });
 
     @Nullable
     @Override
@@ -73,6 +100,7 @@ public class ChatFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         scriptId = getArguments() == null ? null : getArguments().getString("scriptId");
+        favoriteStore = new ImageFavoriteStore(requireContext());
 
         ViewModelFactory factory = new ViewModelFactory(
                 ((RolePlayChatApp) requireActivity().getApplication()).container());
@@ -179,6 +207,9 @@ public class ChatFragment extends Fragment {
         } else if (id == R.id.menu_chat_send_image) {
             showCharacterImageDialog();
             return true;
+        } else if (id == R.id.menu_chat_favorites) {
+            showFavorites();
+            return true;
         } else if (id == R.id.menu_chat_clear) {
             confirmClearChat();
             return true;
@@ -272,7 +303,7 @@ public class ChatFragment extends Fragment {
         layoutManager = new LinearLayoutManager(requireContext());
         layoutManager.setStackFromEnd(true);
         recyclerView.setLayoutManager(layoutManager);
-        adapter = new ChatMessageAdapter(this::openMoments, this::mentionCharacter);
+        adapter = new ChatMessageAdapter(this::openMoments, this::mentionCharacter, this::openImage);
         recyclerView.setAdapter(adapter);
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
@@ -287,6 +318,123 @@ public class ChatFragment extends Fragment {
                     viewModel.loadEarlier();
                 }
             }
+        });
+    }
+
+    private void openImage(ChatMessage message, MessageAttachment attachment) {
+        if (attachment == null) return;
+        showImage(attachment.getLocalPath());
+    }
+
+    private void showImage(String localPath) {
+        if (!isAdded() || localPath == null) return;
+        File file = assetStore().resolve(localPath);
+        if (file == null) {
+            Toast.makeText(requireContext(), "图片文件已不存在", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        ImageView image = new ImageView(requireContext());
+        image.setBackgroundColor(android.graphics.Color.BLACK);
+        image.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        Glide.with(this).load(file).into(image);
+        LinearLayout content = new LinearLayout(requireContext());
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.setBackgroundColor(android.graphics.Color.BLACK);
+        content.addView(image, new LinearLayout.LayoutParams(-1, 0, 1f));
+        LinearLayout actions = new LinearLayout(requireContext());
+        actions.setGravity(android.view.Gravity.CENTER);
+        actions.setPadding(12, 8, 12, 12);
+        Button save = new Button(requireContext()); save.setText("保存");
+        Button favorite = new Button(requireContext()); favorite.setText(favoriteStore.isFavorite(localPath) ? "取消收藏" : "收藏");
+        Button close = new Button(requireContext()); close.setText("关闭");
+        actions.addView(save, new LinearLayout.LayoutParams(0, -2, 1f));
+        actions.addView(favorite, new LinearLayout.LayoutParams(0, -2, 1f));
+        actions.addView(close, new LinearLayout.LayoutParams(0, -2, 1f));
+        content.addView(actions, new LinearLayout.LayoutParams(-1, -2));
+        Dialog dialog = new Dialog(requireContext(), android.R.style.Theme_Black_NoTitleBar_Fullscreen);
+        dialog.setContentView(content);
+        save.setOnClickListener(v -> saveImage(file));
+        favorite.setOnClickListener(v -> {
+            boolean added = favoriteStore.toggle(localPath);
+            favorite.setText(added ? "取消收藏" : "收藏");
+            Toast.makeText(requireContext(), added ? "已收藏" : "已取消收藏", Toast.LENGTH_SHORT).show();
+        });
+        close.setOnClickListener(v -> dialog.dismiss());
+        dialog.show();
+    }
+
+    private void showFavorites() {
+        if (!isAdded()) return;
+        java.util.List<String> paths = new ArrayList<>();
+        for (String path : favoriteStore.all()) if (assetStore().resolve(path) != null) paths.add(path);
+        Collections.sort(paths, Collections.reverseOrder());
+        if (paths.isEmpty()) {
+            Toast.makeText(requireContext(), "还没有收藏的图片，打开图片后长按即可收藏", Toast.LENGTH_LONG).show();
+            return;
+        }
+        String[] labels = new String[paths.size()];
+        for (int i = 0; i < paths.size(); i++) labels[i] = new File(paths.get(i)).getName();
+        new MaterialAlertDialogBuilder(requireContext()).setTitle("图片收藏")
+                .setItems(labels, (d, which) -> showImage(paths.get(which)))
+                .setNegativeButton(R.string.action_close, null).show();
+    }
+
+    private LocalAssetStore assetStore() {
+        return ((RolePlayChatApp) requireActivity().getApplication()).container().assetStore;
+    }
+
+    private void saveImage(File source) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            pendingSaveFile = source;
+            Intent create = new Intent(Intent.ACTION_CREATE_DOCUMENT)
+                    .addCategory(Intent.CATEGORY_OPENABLE).setType("image/png")
+                    .putExtra(Intent.EXTRA_TITLE, "RolePlayChat_" + System.currentTimeMillis() + ".png");
+            saveDocumentLauncher.launch(create);
+            return;
+        }
+        RolePlayChatApp app = (RolePlayChatApp) requireActivity().getApplication();
+        app.container().executors.diskIO().execute(() -> {
+            Uri destination = null;
+            try {
+                ContentValues values = new ContentValues();
+                values.put(MediaStore.Images.Media.DISPLAY_NAME, "RolePlayChat_" + System.currentTimeMillis() + ".png");
+                values.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
+                values.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/RolePlayChat");
+                values.put(MediaStore.Images.Media.IS_PENDING, 1);
+                destination = app.getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+                if (destination == null) throw new java.io.IOException("无法创建相册文件");
+                try (FileInputStream input = new FileInputStream(source);
+                     OutputStream output = app.getContentResolver().openOutputStream(destination)) {
+                    if (output == null) throw new java.io.IOException("无法写入相册");
+                    byte[] buffer = new byte[8192]; int count;
+                    while ((count = input.read(buffer)) != -1) output.write(buffer, 0, count);
+                }
+                ContentValues done = new ContentValues(); done.put(MediaStore.Images.Media.IS_PENDING, 0);
+                app.getContentResolver().update(destination, done, null, null);
+                showSaveResult("已保存到相册");
+            } catch (Exception error) {
+                if (destination != null) app.getContentResolver().delete(destination, null, null);
+                showSaveResult("保存失败：" + error.getMessage());
+            }
+        });
+    }
+
+    private void copyToUri(File source, Uri destination) {
+        RolePlayChatApp app = (RolePlayChatApp) requireActivity().getApplication();
+        app.container().executors.diskIO().execute(() -> {
+            try (FileInputStream input = new FileInputStream(source);
+                 OutputStream output = app.getContentResolver().openOutputStream(destination)) {
+                if (output == null) throw new java.io.IOException("无法写入图片");
+                byte[] buffer = new byte[8192]; int count;
+                while ((count = input.read(buffer)) != -1) output.write(buffer, 0, count);
+                showSaveResult("图片已保存");
+            } catch (Exception error) { showSaveResult("保存失败：" + error.getMessage()); }
+        });
+    }
+
+    private void showSaveResult(String message) {
+        if (getActivity() != null) requireActivity().runOnUiThread(() -> {
+            if (isAdded()) Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show();
         });
     }
 

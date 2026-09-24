@@ -109,7 +109,7 @@ public class AppContainer {
         this.aiServiceFactory = new OpenAiServiceFactory(settingsRepository.getApiConfig());
         settingsRepository.setApiConfigChangeListener(aiServiceFactory::updateConfig);
         this.aiRepository = new AiRepositoryImpl(aiServiceFactory);
-        this.imageGenerationGateway = new HuajingLanClient(secretStore);
+        this.imageGenerationGateway = new HuajingLanClient(this.context, secretStore);
 
         this.scriptRepository = new ScriptRepositoryImpl(database);
         this.worldRepository = new WorldRepositoryImpl(database);
@@ -120,7 +120,7 @@ public class AppContainer {
         this.importExportRepository = new ImportExportRepositoryImpl(database, assetStore);
         this.momentRepository = new MomentRepositoryImpl(database);
         this.imageGenerationScheduler = new ImageGenerationScheduler(
-                scriptRepository, characterVisualRepository, imageGenerationGateway,
+                scriptRepository, characterVisualRepository, characterRepository, imageGenerationGateway,
                 database.imageGenerationJobDao(), database.messageAttachmentDao(),
                 database.messageDao(), chatRepository,
                 assetStore, executors, idGenerator);
