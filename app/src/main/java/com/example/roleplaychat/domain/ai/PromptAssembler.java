@@ -86,7 +86,8 @@ public final class PromptAssembler {
                     sb.append("  性格：").append(npc.getPersonality()).append('\n');
                 }
                 if (npc.getBackstory() != null && !npc.getBackstory().isEmpty()) {
-                    sb.append("  背景故事：").append(truncate(npc.getBackstory(), 300)).append('\n');
+                    // 角色背景属于一致性的硬设定，不从中间截断。
+                    sb.append("  背景故事：").append(npc.getBackstory()).append('\n');
                 }
                 if (npc.getSpeakingStyle() != null && !npc.getSpeakingStyle().isEmpty()) {
                     sb.append("  说话风格：").append(npc.getSpeakingStyle()).append('\n');
@@ -253,8 +254,4 @@ public final class PromptAssembler {
         return messages;
     }
 
-    /** 超长背景按字符截断（控制上下文预算）。 */
-    private static String truncate(String value, int maxChars) {
-        return value.length() <= maxChars ? value : value.substring(0, maxChars);
-    }
 }

@@ -59,6 +59,8 @@ public final class AiTurnOrchestrator {
     private final String language;
     @Nullable
     private final ImageGenerationScheduler imageGenerationScheduler;
+    @Nullable
+    private final ContextSummaryManager contextSummaryManager;
 
     private final Object requestLock = new Object();
     private final Map<String, ActiveRequest> activeRequests = new HashMap<>();
@@ -82,7 +84,7 @@ public final class AiTurnOrchestrator {
                                SettingsRepository settingsRepository, AiRepository aiRepository,
                                IdGenerator idGenerator, String language) {
         this(scriptRepository, worldRepository, characterRepository, chatRepository,
-                settingsRepository, null, aiRepository, idGenerator, language, null);
+                settingsRepository, null, aiRepository, idGenerator, language, null, null);
     }
 
     public AiTurnOrchestrator(ScriptRepository scriptRepository, WorldRepository worldRepository,
@@ -90,7 +92,7 @@ public final class AiTurnOrchestrator {
                                SettingsRepository settingsRepository, MomentRepository momentRepository, AiRepository aiRepository,
                               IdGenerator idGenerator, String language) {
         this(scriptRepository, worldRepository, characterRepository, chatRepository, settingsRepository,
-                momentRepository, aiRepository, idGenerator, language, null);
+                momentRepository, aiRepository, idGenerator, language, null, null);
     }
 
     public AiTurnOrchestrator(ScriptRepository scriptRepository, WorldRepository worldRepository,
@@ -98,6 +100,16 @@ public final class AiTurnOrchestrator {
                                SettingsRepository settingsRepository, MomentRepository momentRepository, AiRepository aiRepository,
                                IdGenerator idGenerator, String language,
                                @Nullable ImageGenerationScheduler imageGenerationScheduler) {
+        this(scriptRepository, worldRepository, characterRepository, chatRepository, settingsRepository,
+                momentRepository, aiRepository, idGenerator, language, imageGenerationScheduler, null);
+    }
+
+    public AiTurnOrchestrator(ScriptRepository scriptRepository, WorldRepository worldRepository,
+                               CharacterRepository characterRepository, ChatRepository chatRepository,
+                               SettingsRepository settingsRepository, MomentRepository momentRepository, AiRepository aiRepository,
+                               IdGenerator idGenerator, String language,
+                               @Nullable ImageGenerationScheduler imageGenerationScheduler,
+                               @Nullable ContextSummaryManager contextSummaryManager) {
         this.scriptRepository = scriptRepository;
         this.worldRepository = worldRepository;
         this.characterRepository = characterRepository;
@@ -108,6 +120,7 @@ public final class AiTurnOrchestrator {
         this.idGenerator = idGenerator;
         this.language = language;
         this.imageGenerationScheduler = imageGenerationScheduler;
+        this.contextSummaryManager = contextSummaryManager;
     }
 
     /**
@@ -156,7 +169,12 @@ public final class AiTurnOrchestrator {
         List<ChatMessage> recent = new ArrayList<>(allMessages.subList(recentStart, allMessages.size()));
         CharacterProfile mentionedCharacter = findMentionedCharacter(recent, npcPool);
         // 只追加的剧情上下文：纪元内每轮只是在末尾追加新消息，前缀缓存才可能命中。
-        String conversation = ContextWindowPolicy.toHistoryContext(allMessages, recentCount);
+        ContextMemoryStore.Snapshot memory = contextSummaryManager == null
+                ? null : contextSummaryManager.getSnapshot(scriptId);
+        String conversation = ContextWindowPolicy.toHistoryContext(allMessages, recentCount, memory);
+        if (contextSummaryManager != null) {
+            contextSummaryManager.ensure(scriptId, allMessages, recentCount);
+        }
 
         // 剧本级对话规则：每轮回复上限与扮演要求；最近发言者用于抑制"轮流表态"。
         int maxResponders = world == null ? WorldSetting.DEFAULT_MAX_RESPONDERS

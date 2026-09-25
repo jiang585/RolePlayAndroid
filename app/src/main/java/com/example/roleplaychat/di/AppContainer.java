@@ -20,6 +20,9 @@ import com.example.roleplaychat.data.repository.WorldRepositoryImpl;
 import com.example.roleplaychat.data.security.KeystoreSecretStore;
 import com.example.roleplaychat.data.security.SecretStore;
 import com.example.roleplaychat.domain.ai.AiTurnOrchestrator;
+import com.example.roleplaychat.domain.ai.ContextSummaryManager;
+import com.example.roleplaychat.domain.ai.ContextMemoryStore;
+import com.example.roleplaychat.data.repository.PreferencesContextMemoryStore;
 import com.example.roleplaychat.domain.ai.ImageGenerationScheduler;
 import com.example.roleplaychat.domain.repository.AiRepository;
 import com.example.roleplaychat.domain.repository.AppearanceRepository;
@@ -80,6 +83,7 @@ public class AppContainer {
 
     // AI 编排
     public final AiTurnOrchestrator aiOrchestrator;
+    public final ContextSummaryManager contextSummaryManager;
     public final ImageGenerationScheduler imageGenerationScheduler;
 
     // 用例
@@ -130,9 +134,14 @@ public class AppContainer {
                 database.messageDao(), chatRepository,
                 assetStore, executors, idGenerator);
 
+        ContextMemoryStore contextMemoryStore = new PreferencesContextMemoryStore(this.context);
+        this.contextSummaryManager = new ContextSummaryManager(
+                aiRepository, settingsRepository, contextMemoryStore);
+
         this.aiOrchestrator = new AiTurnOrchestrator(
                 scriptRepository, worldRepository, characterRepository, chatRepository,
-                settingsRepository, momentRepository, aiRepository, idGenerator, "中文", imageGenerationScheduler);
+                settingsRepository, momentRepository, aiRepository, idGenerator, "中文",
+                imageGenerationScheduler, contextSummaryManager);
 
         this.createScriptUseCase = new CreateScriptUseCase(scriptRepository);
         this.deleteScriptUseCase = new DeleteScriptUseCase(scriptRepository);
